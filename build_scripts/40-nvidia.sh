@@ -17,7 +17,7 @@ packages=(
 KVER=$(ls /usr/lib/modules | head -n1)
 
 dnf5 config-manager addrepo --from-repofile=https://negativo17.org/repos/fedora-nvidia.repo
-# dnf5 config-manager setopt "*rpmfusion*".enabled=0
+dnf5 config-manager setopt "*rpmfusion*".enabled=0
 dnf5 config-manager setopt fedora-nvidia.enabled=0
 sed -i '/^enabled=/a\priority=90' /etc/yum.repos.d/fedora-nvidia.repo
 
@@ -45,4 +45,7 @@ rm -f nvidia-container.pp
 rm /etc/xdg/autostart/nvidia-settings-load.desktop
 
 systemctl enable nvctk-cdi.service
-echo "test"
+
+preset_file="/usr/lib/systemd/system-preset/01-kyawthuite.preset"
+touch "$preset_file"
+echo "enable nvctk-cdi.service" >> "$preset_file"

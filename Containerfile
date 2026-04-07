@@ -180,7 +180,7 @@ RUN bootc container lint
 ### gnome-nvidia image
 ###
 
-FROM ghcr.io/ublue-os/silverblue-nvidia:${FEDORA_VERSION} AS kyawthuite-gnome-nvidia
+FROM ghcr.io/ublue-os/silverblue-main:${FEDORA_VERSION} AS kyawthuite-gnome-nvidia
 ARG FEDORA_VERSION
 ENV FEDORA_VERSION=${FEDORA_VERSION}
 
@@ -208,6 +208,11 @@ RUN --mount=type=bind,from=ctx,source=/,target=/ctx \
     --mount=type=tmpfs,dst=/var \
     --mount=type=tmpfs,dst=/tmp \
     /ctx/10-kernel.sh
+
+RUN --mount=type=bind,from=ctx,source=/,target=/ctx \
+    --mount=type=tmpfs,dst=/var \
+    --mount=type=tmpfs,dst=/tmp \
+    /ctx/40-nvidia.sh
 
 RUN --mount=type=bind,from=ctx,source=/,target=/ctx \
     --mount=type=tmpfs,dst=/var \

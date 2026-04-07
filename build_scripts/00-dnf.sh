@@ -2,13 +2,18 @@
 
 set -ouex pipefail
 
+shopt -s nullglob
+
+dnf5 -y install dnf5-plugins
+
 echo -n "max_parallel_downloads=10" >>/etc/dnf/dnf.conf
 
-## copr
-# to not update overwrite cachy kernel with default one during updates:
+dnf5 -y copr enable bieszczaders/kernel-cachyos-lto
+dnf5 -y copr enable bieszczaders/kernel-cachyos-addons
+
+# Keep Fedora kernel packages from replacing Cachy kernel during upgrades.
 dnf5 -y config-manager setopt "*fedora*".exclude="kernel-core-* kernel-modules-* kernel-uki-virt-*"
 dnf5 -y config-manager setopt "*updates*".exclude="kernel-core-* kernel-modules-* kernel-uki-virt-*"
-# dnf5 -y config-manager setopt "*fedora-multimedia*".exclude="akmod-nvidia kmod-nvidia"
 
 # cli tools
 # dnf5 -y install zsh fastfetch

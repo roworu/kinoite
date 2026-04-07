@@ -102,27 +102,28 @@ jobs:
           sep-tags: ' '
           sep-annotations: ' '
 
+      - name: Check secure boot key
+        id: secret-check
+        run: |
+          if [ -z "${{ secrets.SECUREBOOT_KEY }}" ]; then
+            echo "present=false" >> $GITHUB_OUTPUT
+          else
+            echo "present=true" >> $GITHUB_OUTPUT
+          fi
+
       - name: Decode Secure Boot keys
+        if: steps.secret-check.outputs.present == 'true'
         run: |
           echo "$SECUREBOOT_KEY" > system_files/base/secureboot/MOK.key
           chmod 600 system_files/base/secureboot/MOK.key
         env:
           SECUREBOOT_KEY: ${{ secrets.SECUREBOOT_KEY }}
 
-#      - name: Prepare build args file
-#        run: |
-#          cat <<'EOF' >>build_args.txt
-#          FEDORA_VERSION=${{ env.FEDORA_VERSION }}
-#          EOF
-
-#      - name: Build Image
-#        id: build_image
-#        run: |
-#          sudo -E buildah build \
-#            --target ${{ env.IMAGE_NAME }} \
-#            --file Containerfile \
-#            --build-arg-file build_args.txt \
-#            --tag raw-img .
+      - name: Prepare build args file
+        run: |
+          cat <<'EOF' >>build_args.txt
+          FEDORA_VERSION=${{ env.FEDORA_VERSION }}
+          EOF
 
       - name: Build Image
         id: build_image
@@ -130,6 +131,7 @@ jobs:
           sudo -E buildah build \
             --target ${{ env.IMAGE_NAME }} \
             --file Containerfile \
+            --build-arg-file build_args.txt \
             --tag raw-img .
 
       - name: Run Rechunker
