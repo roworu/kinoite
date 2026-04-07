@@ -16,7 +16,7 @@ popd
 for pkg in kernel kernel-core kernel-modules kernel-modules-core; do
   rpm --erase $pkg --nodeps
 done
-ls -lha /usr/lib/modules/
+ls -lha /usr/lib/modules/*
 rm -rf /usr/lib/modules/*
 rm -rf /boot/*
 
