@@ -2,8 +2,8 @@
 
 set -ouex pipefail
 
-dnf5 -y copr enable bieszczaders/kernel-cachyos-lto
-dnf5 -y copr enable bieszczaders/kernel-cachyos-addons
+dnf5 -y copr enable bieszczaders/kernel-cachyos-lto fedora-${FEDORA_VERSION}-x86_64
+dnf5 -y copr enable bieszczaders/kernel-cachyos-addons fedora-${FEDORA_VERSION}-x86_64
 
 # disable rpm/dracut kernel hooks
 pushd /usr/lib/kernel/install.d
