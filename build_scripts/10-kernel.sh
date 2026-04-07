@@ -27,8 +27,8 @@ kernel_packages=(
     kernel-cachyos-lto-devel-matched
     kernel-cachyos-lto-modules
 )
-dnf5 -y install "${packages[@]}"
-dnf5 versionlock add "${packages[@]}"
+dnf5 -y install "${kernel_packages[@]}"
+dnf5 versionlock add "${kernel_packages[@]}"
 
 # upgrade image
 dnf5 -y distro-sync
