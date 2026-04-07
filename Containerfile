@@ -59,11 +59,12 @@ RUN bootc container lint
 ### plasma-nvidia desktop image
 ###
 
-# FROM ghcr.io/ublue-os/kinoite-nvidia:${FEDORA_VERSION} AS kyawthuite-nvidia
-FROM ghcr.io/ublue-os/kinoite-main:${FEDORA_VERSION} AS kyawthuite-nvidia
+FROM ghcr.io/ublue-os/kinoite-nvidia:${FEDORA_VERSION} AS kyawthuite-nvidia
+# FROM ghcr.io/ublue-os/kinoite-main:${FEDORA_VERSION} AS kyawthuite-nvidia
 
 COPY system_files/base /
 COPY system_files/plasma /
+COPY system_files/nvidia /
 COPY --from=ghcr.io/ublue-os/brew:latest /system_files /
 RUN --mount=type=cache,dst=/var/cache \
     --mount=type=cache,dst=/var/log \
@@ -170,6 +171,7 @@ FROM ghcr.io/ublue-os/silverblue-nvidia:${FEDORA_VERSION} AS kyawthuite-gnome-nv
 
 COPY system_files/base /
 COPY system_files/gnome /
+COPY system_files/nvidia /
 COPY --from=ghcr.io/ublue-os/brew:latest /system_files /
 RUN --mount=type=cache,dst=/var/cache \
     --mount=type=cache,dst=/var/log \
