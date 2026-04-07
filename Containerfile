@@ -62,8 +62,7 @@ RUN bootc container lint
 ###
 
 # FROM ghcr.io/ublue-os/kinoite-nvidia:${FEDORA_VERSION} AS kyawthuite-nvidia
-# FROM ghcr.io/ublue-os/kinoite-main:${FEDORA_VERSION} AS kyawthuite-nvidia
-FROM quay.io/fedora/fedora-kinoite:${FEDORA_VERSION} AS kyawthuite-nvidia
+FROM ghcr.io/ublue-os/kinoite-main:${FEDORA_VERSION} AS kyawthuite-nvidia
 ARG FEDORA_VERSION
 ENV FEDORA_VERSION=${FEDORA_VERSION}
 
