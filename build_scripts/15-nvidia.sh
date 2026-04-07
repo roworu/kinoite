@@ -17,7 +17,6 @@ packages=(
 KVER=$(ls /usr/lib/modules | head -n1)
 
 dnf5 config-manager addrepo --from-repofile=https://negativo17.org/repos/fedora-nvidia.repo
-# dnf5 config-manager setopt "*rpmfusion*".enabled=0
 dnf5 config-manager setopt fedora-nvidia.enabled=0
 sed -i '/^enabled=/a\priority=90' /etc/yum.repos.d/fedora-nvidia.repo
 
@@ -26,9 +25,11 @@ dnf5 -y install akmods
 
 # Negativo17 akmod-nvidia %post may fail in container builds on recent stacks
 # ("Not to be used as root"). Retry without scriptlets; we build explicitly below.
-if ! dnf5 -y install --enablerepo=fedora-nvidia akmod-nvidia; then
-  dnf5 -y install --setopt=tsflags=noscripts --enablerepo=fedora-nvidia akmod-nvidia
-fi
+#if ! dnf5 -y install --enablerepo=fedora-nvidia akmod-nvidia; then
+#  dnf5 -y install --setopt=tsflags=noscripts --enablerepo=fedora-nvidia akmod-nvidia
+#fi
+
+dnf5 -y install --enablerepo=fedora-nvidia akmod-nvidia
 
 mkdir -p /var/tmp
 chmod 1777 /var/tmp
