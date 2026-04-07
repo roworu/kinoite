@@ -4,59 +4,82 @@ echo "::group:: ===$(basename "$0")==="
 
 set -ouex pipefail
 
-## kernel sign
+# 1) detect kernel version and paths
 KVER=$(ls /usr/lib/modules | head -n1)
 KIMAGE="/usr/lib/modules/$KVER/vmlinuz"
 SIGN_DIR="/secureboot"
 
-dnf5 -y install sbsigntools
+# 2) sign kernel + modules
+sign_kernel_and_modules() {
+  # install required tools
+  dnf5 -y install sbsigntools
 
-sbsign \
-  --key "$SIGN_DIR/MOK.key" \
-  --cert "$SIGN_DIR/MOK.pem" \
-  --output "${KIMAGE}.signed" \
-  "$KIMAGE"
-mv "${KIMAGE}.signed" "$KIMAGE"
+  # sign kernel image
+  sbsign \
+    --key "$SIGN_DIR/MOK.key" \
+    --cert "$SIGN_DIR/MOK.pem" \
+    --output "${KIMAGE}.signed" \
+    "$KIMAGE"
 
-find "/lib/modules/$KVER" -type f -name '*.ko.xz' -print0 | while IFS= read -r -d '' comp; do
-  uncompressed="${comp%.xz}"
+  mv "${KIMAGE}.signed" "$KIMAGE"
 
-  if xz -d --keep "$comp"; then
-    echo "Decompressed $comp → $uncompressed"
-  else
-    echo "Warning: failed to decompress $comp, skipping"
-    continue
-  fi
+  # sign all kernel modules
+  find "/lib/modules/$KVER" -type f -name '*.ko.xz' -print0 | while IFS= read -r -d '' comp; do
+    uncompressed="${comp%.xz}"
 
-  /usr/src/kernels/"$KVER"/scripts/sign-file \
+    # 1) decompress module
+    if xz -d --keep "$comp"; then
+      echo "Decompressed $comp → $uncompressed"
+    else
+      echo "Warning: failed to decompress $comp, skipping"
+      continue
+    fi
+
+    # 2) sign module (don't fail whole script if one module fails)
+    /usr/src/kernels/"$KVER"/scripts/sign-file \
       sha512 "$SIGN_DIR/MOK.key" "$SIGN_DIR/MOK.pem" "$uncompressed" || true
-  rm -f "$comp"
 
-  if xz -z "$uncompressed"; then
-    echo "Recompressed and signed $uncompressed - ${uncompressed}.xz"
-  else
-    echo "Warning: failed to recompress $uncompressed"
+    # 3) cleanup compressed original
+    rm -f "$comp"
+
+    # 4) recompress
+    if xz -z "$uncompressed"; then
+      echo "Recompressed and signed $uncompressed"
+    else
+      echo "Warning: failed to recompress $uncompressed"
+    fi
+  done
+
+  # remove private key after signing
+  rm -f "$SIGN_DIR/MOK.key"
+}
+
+# 3) build initramfs
+build_initramfs() {
+  echo "Building initramfs for kernel version: $KVER"
+
+  # sanity check
+  if [ ! -d "/usr/lib/modules/$KVER" ]; then
+    echo "Error: modules missing for kernel $KVER"
+    exit 1
   fi
-done
 
-rm -f "$SIGN_DIR/MOK.key"
+  # generate module dependencies
+  depmod -a "$KVER"
 
-echo "Building initramfs for kernel version: $KVER"
+  # dracut build
+  export DRACUT_NO_XATTR=1
+  /usr/bin/dracut \
+    --no-hostonly \
+    --kver "$KVER" \
+    --reproducible \
+    --zstd -v \
+    --add ostree \
+    -f "/usr/lib/modules/$KVER/initramfs.img"
 
-if [ ! -d "/usr/lib/modules/$KVER" ]; then
-  echo "Error: modules missing for kernel $KVER"
-  exit 1
-fi
+  # secure permissions
+  chmod 0600 "/usr/lib/modules/$KVER/initramfs.img"
+}
 
-## initramfs build
-depmod -a "$KVER"
-export DRACUT_NO_XATTR=1
-/usr/bin/dracut \
-  --no-hostonly \
-  --kver "$KVER" \
-  --reproducible \
-  --zstd -v \
-  --add ostree \
-  -f "/usr/lib/modules/$KVER/initramfs.img"
-
-chmod 0600 "/usr/lib/modules/$KVER/initramfs.img"
+build_initramfs
+sign_kernel_and_modules
