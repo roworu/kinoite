@@ -16,7 +16,7 @@ jobs:
     strategy:
       fail-fast: false
       matrix:
-        flavor: ["", "nvidia", "test", "gnome", "gnome-nvidia"]
+        flavor: ["", "nvidia", "i3", "gnome", "gnome-nvidia"]
 
     runs-on: ubuntu-24.04
 
