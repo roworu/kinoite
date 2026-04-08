@@ -96,8 +96,9 @@ mask_services=(
   # to not mess with custom kernel installation
   akmods-keygen.target
   akmods-keygen@akmods-keygen.service
-  # disable automatic updates download
-  bootc-fetch-apply-updates.service
+  # disable automatic updates
+  bootc-fetch-apply-updates.timer
+  rpm-ostree-automatic.timer
 )
 
 # enable/disable system services
