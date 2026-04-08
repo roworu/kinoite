@@ -6,7 +6,7 @@ set -ouex pipefail
 
 # swap system firefox to flatpak version
 dnf5 -y remove firefox firefox-langpacks
-flatpak install flathub org.mozilla.firefox
+flatpak install -y flathub org.mozilla.firefox
 
 # remove update tray icon
 rm /etc/xdg/autostart/org.kde.discover.notifier.desktop || true
