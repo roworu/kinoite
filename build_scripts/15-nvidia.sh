@@ -28,10 +28,11 @@ dnf5 -y install akmods
 #if ! dnf5 -y install --enablerepo=fedora-nvidia akmod-nvidia; then
 #  dnf5 -y install --setopt=tsflags=noscripts --enablerepo=fedora-nvidia akmod-nvidia
 #fi
-
-if ! dnf5 -y install --enablerepo=fedora-nvidia akmod-nvidia; then
-    echo "Failed to install with scripts enabled"
-fi
+dnf5 -y install --setopt=tsflags=noscripts --enablerepo=fedora-nvidia akmod-nvidia
+# TODO try to install and boot with scripts disabled
+#if ! dnf5 -y install --enablerepo=fedora-nvidia akmod-nvidia; then
+#    echo "Failed to install with scripts enabled"
+#fi
 
 mkdir -p /var/tmp
 chmod 1777 /var/tmp
