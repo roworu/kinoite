@@ -80,7 +80,6 @@ build_initramfs() {
     --add ostree \
     -f "/usr/lib/modules/$KERNEL_VERSION/initramfs.img"
 
-  # secure permissions
   chmod 0600 "/usr/lib/modules/$KERNEL_VERSION/initramfs.img"
 }
 
