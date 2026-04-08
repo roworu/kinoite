@@ -4,7 +4,14 @@ Version=1.0
 Name=Update system
 GenericName=Update system
 Icon=update-none
-Exec=sh -c 'kdialog --yesno "This will upgrade the entire system. Continue?" && sys-upgrade'
+Exec=sh -c '
+printf "This will start full system update process. Continue? [y/N]: "
+read -r ans
+case "$ans" in
+  y|Y) exec sys-upgrade ;;
+  *) echo "Aborted."; exit 0 ;;
+esac
+'
 Terminal=true
 Categories=System;ConsoleOnly;
 Keywords=system;update;upgrade;refresh
