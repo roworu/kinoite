@@ -1,0 +1,15 @@
+[Unit]
+Description=Install fpatpaks; install Flathub repo
+Wants=network-online.target
+After=local-fs.target
+
+[Service]
+Type=oneshot
+ExecStart=/usr/bin/flatpak remote-add --if-not-exists --system flathub /etc/flatpak/remotes.d/flathub.flatpakrepo
+ExecStart=/usr/bin/flatpak remote-modify --system --enable flathub
+ExecStart=/usr/bin/flatpak remote-add --system --if-not-exists --disable --title "Fedora Flatpaks" fedora oci+https://registry.fedoraproject.org
+ExecStart=/usr/bin/flatpak remote-add --system --if-not-exists --disable --title "Fedora Flatpaks (testing)" fedora-testing oci+https://registry.fedoraproject.org#testing
+ExecStart=/usr/bin/flatpak install --noninteractive --system flathub org.mozilla.firefox org.kde.gwenview || true
+
+[Install]
+WantedBy=default.target
