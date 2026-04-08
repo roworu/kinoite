@@ -74,7 +74,7 @@ build_initramfs() {
   export DRACUT_NO_XATTR=1
   /usr/bin/dracut \
     --no-hostonly \
-    --KERNEL_VERSION "$KERNEL_VERSION" \
+    --kver "$KERNEL_VERSION" \
     --reproducible \
     --zstd -v \
     --add ostree \
