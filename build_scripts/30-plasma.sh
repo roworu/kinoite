@@ -4,11 +4,12 @@ echo "::group:: ===$(basename "$0")==="
 
 set -ouex pipefail
 
+# swap system firefox to flatpak version
+dnf5 -y remove firefox firefox-langpacks
+flatpak install flathub org.mozilla.firefox
+
 # remove update tray icon
 rm /etc/xdg/autostart/org.kde.discover.notifier.desktop || true
-
-# additional packages
-dnf5 -y install plasma-discover-rpm-ostree
 
 rm -vf /usr/share/applications/org.kde.kdebugsettings.desktop || true
 rm -vf /usr/share/applications/org.kde.khelpcenter.desktop || true
