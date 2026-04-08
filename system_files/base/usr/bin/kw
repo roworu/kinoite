@@ -1,6 +1,5 @@
 #!/usr/bin/env python3
 
-from dnf.const import PROGRAM_NAME
 import argparse
 import subprocess
 import sys
