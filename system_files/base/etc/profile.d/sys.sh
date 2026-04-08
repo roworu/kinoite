@@ -17,7 +17,19 @@ _log() {
     printf "%b%s%b\n" "$color" "$*" '\033[0m'
 }
 
+_confirmation() {
+
+    text="${1:-}"
+    _log "$text"
+    read -r ans
+    case "$ans" in
+      y|Y) exec sys-upgrade ;;
+      *) echo "Aborted."; exit 0 ;;
+    esac
+}
+
 sys-update() {
+    _confirmation "This will just check for system updates, but not apply them. Continue? [y/N]: "
     _log "==> Checking bootc..."
     output=$(sudo bootc upgrade --check || true)
 
@@ -75,6 +87,7 @@ sys-update() {
 
 sys-upgrade() {
 
+    _confirmation "This will check for system updates, and if any - immediatly apply them. Continue? [y/N]: "
     _log "==> Upgrading bootc..."
     sudo bootc upgrade
 
@@ -88,12 +101,14 @@ sys-upgrade() {
 }
 
 sys-upgrade-reboot() {
+    _confirmation "This will check for system updates, and if any - immediatly apply them, then reboot. Continue? [y/N]: "
     sys-upgrade
     _log "==> Rebooting..."
     sudo reboot
 }
 
 sys-cleanup() {
+    _confirmation "This will cleanup unused brew and flatpak files. Continue? [y/N]: "
     _log "==> Cleaning flatpak unused runtimes..."
     flatpak uninstall --unused -y
 

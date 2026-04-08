@@ -1,10 +1,10 @@
 [Desktop Entry]
 Type=Application
 Version=1.0
-Name=Update system (Only check)
-GenericName=Update system (Only check)
-Icon=update-none
-Exec=sys-update
+Name=Update system (Perform)
+GenericName=Update system (Perform)
+Icon=update-busy
+Exec=sys-upgrade
 Terminal=true
 Categories=System;ConsoleOnly;
 Keywords=system;update;upgrade;refresh
