@@ -17,8 +17,18 @@ dnf5 -y copr enable bieszczaders/kernel-cachyos-addons "fedora-${FEDORA_VERSION}
 dnf5 -y config-manager setopt "*fedora*".exclude="kernel-core-* kernel-modules-* kernel-uki-virt-*"
 dnf5 -y config-manager setopt "*updates*".exclude="kernel-core-* kernel-modules-* kernel-uki-virt-*"
 
-# cli tools
+# shell setup
 dnf5 -y install zsh fastfetch
+
+ZSH_PATH=/usr/bin/zsh
+
+grep -qxF "$ZSH_PATH" /etc/shells || echo "$ZSH_PATH" >> /etc/shells
+
+if grep -q '^SHELL=' /etc/default/useradd; then
+  sed -i "s|^SHELL=.*|SHELL=${ZSH_PATH}|" /etc/default/useradd
+else
+  echo "SHELL=${ZSH_PATH}" >> /etc/default/useradd
+fi
 
 # virtualization tools, for ui install virt-manager from flatpak
 dnf5 -y install qemu-kvm libvirt virt-install guestfs-tools
