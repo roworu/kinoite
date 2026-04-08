@@ -1,10 +1,11 @@
 #!/usr/bin/env bash
 
-set -ouex pipefail
+echo "::group:: ===$(basename "$0")==="
 
+set -ouex pipefail
 shopt -s nullglob
 
-packages=(
+nvidia_driver_packages=(
   nvidia-driver-cuda
   libnvidia-fbc
   libva-nvidia-driver
@@ -14,34 +15,21 @@ packages=(
   nvidia-settings
 )
 
-KVER=$(ls /usr/lib/modules | head -n1)
+KERNEL_VERSION=$(ls /usr/lib/modules | head -n1)
 
 dnf5 config-manager addrepo --from-repofile=https://negativo17.org/repos/fedora-nvidia.repo
 dnf5 config-manager setopt fedora-nvidia.enabled=0
 sed -i '/^enabled=/a\priority=90' /etc/yum.repos.d/fedora-nvidia.repo
 
-# Ensure akmods base tooling and users are present with normal scriptlets.
 dnf5 -y install akmods
-
-# Negativo17 akmod-nvidia %post may fail in container builds on recent stacks
-# ("Not to be used as root"). Retry without scriptlets; we build explicitly below.
-#if ! dnf5 -y install --enablerepo=fedora-nvidia akmod-nvidia; then
-#  dnf5 -y install --setopt=tsflags=noscripts --enablerepo=fedora-nvidia akmod-nvidia
-#fi
 dnf5 -y install --setopt=tsflags=noscripts --enablerepo=fedora-nvidia akmod-nvidia
-# TODO try to install and boot with scripts disabled
-#if ! dnf5 -y install --enablerepo=fedora-nvidia akmod-nvidia; then
-#    echo "Failed to install with scripts enabled"
-#fi
 
 mkdir -p /var/tmp
 chmod 1777 /var/tmp
 
-akmods --force --kernels "${KVER}" --kmod "nvidia"
-cat /var/cache/akmods/nvidia/*.failed.log || true
-
-dnf5 -y install --enablerepo=fedora-nvidia "${packages[@]}"
-dnf5 versionlock add "${packages[@]}"
+akmods --force --kernels "${KERNEL_VERSION}" --kmod "nvidia"
+dnf5 -y install --enablerepo=fedora-nvidia "${nvidia_driver_packages[@]}"
+dnf5 versionlock add "${nvidia_driver_packages[@]}"
 
 dnf5 config-manager addrepo --from-repofile=https://nvidia.github.io/libnvidia-container/stable/rpm/nvidia-container-toolkit.repo
 dnf5 config-manager setopt nvidia-container-toolkit.enabled=0

@@ -5,8 +5,8 @@ echo "::group:: ===$(basename "$0")==="
 set -ouex pipefail
 
 # 1) detect kernel version and paths
-KVER=$(ls /usr/lib/modules | head -n1)
-KIMAGE="/usr/lib/modules/$KVER/vmlinuz"
+KERNEL_VERSION=$(ls /usr/lib/modules | head -n1)
+KERNEL_IMAGE="/usr/lib/modules/$KERNEL_VERSION/vmlinuz"
 SIGN_DIR="/secureboot"
 
 mkdir -p /var/tmp || true
@@ -21,13 +21,13 @@ sign_kernel_and_modules() {
   sbsign \
     --key "$SIGN_DIR/MOK.key" \
     --cert "$SIGN_DIR/MOK.pem" \
-    --output "${KIMAGE}.signed" \
-    "$KIMAGE"
+    --output "${KERNEL_IMAGE}.signed" \
+    "$KERNEL_IMAGE"
 
-  mv "${KIMAGE}.signed" "$KIMAGE"
+  mv "${KERNEL_IMAGE}.signed" "$KERNEL_IMAGE"
 
   # sign all kernel modules
-  find "/lib/modules/$KVER" -type f -name '*.ko.xz' -print0 | while IFS= read -r -d '' comp; do
+  find "/lib/modules/$KERNEL_VERSION" -type f -name '*.ko.xz' -print0 | while IFS= read -r -d '' comp; do
     uncompressed="${comp%.xz}"
 
     # 1) decompress module
@@ -39,7 +39,7 @@ sign_kernel_and_modules() {
     fi
 
     # 2) sign module (don't fail whole script if one module fails)
-    /usr/src/kernels/"$KVER"/scripts/sign-file \
+    /usr/src/kernels/"$KERNEL_VERSION"/scripts/sign-file \
       sha512 "$SIGN_DIR/MOK.key" "$SIGN_DIR/MOK.pem" "$uncompressed" || true
 
     # 3) cleanup compressed original
@@ -59,30 +59,40 @@ sign_kernel_and_modules() {
 
 # 3) build initramfs
 build_initramfs() {
-  echo "Building initramfs for kernel version: $KVER"
+  echo "Building initramfs for kernel version: $KERNEL_VERSION"
 
   # sanity check
-  if [ ! -d "/usr/lib/modules/$KVER" ]; then
-    echo "Error: modules missing for kernel $KVER"
+  if [ ! -d "/usr/lib/modules/$KERNEL_VERSION" ]; then
+    echo "Error: modules missing for kernel $KERNEL_VERSION"
     exit 1
   fi
 
   # generate module dependencies
-  depmod -a "$KVER"
+  depmod -a "$KERNEL_VERSION"
 
   # dracut build
   export DRACUT_NO_XATTR=1
   /usr/bin/dracut \
     --no-hostonly \
-    --kver "$KVER" \
+    --KERNEL_VERSION "$KERNEL_VERSION" \
     --reproducible \
     --zstd -v \
     --add ostree \
-    -f "/usr/lib/modules/$KVER/initramfs.img"
+    -f "/usr/lib/modules/$KERNEL_VERSION/initramfs.img"
 
   # secure permissions
-  chmod 0600 "/usr/lib/modules/$KVER/initramfs.img"
+  chmod 0600 "/usr/lib/modules/$KERNEL_VERSION/initramfs.img"
+}
+
+# 4) cleanup final image
+cleanup() {
+    find /etc/yum.repos.d/ -maxdepth 1 -type f -name '*.repo' ! -name 'fedora.repo' ! -name 'fedora-updates.repo' ! -name 'fedora-updates-testing.repo' -exec rm -f {} +
+
+    dnf5 clean all || true
+    rm -rf /tmp/* || true
+    rm -rf /var/log/dnf5.log || true
 }
 
 build_initramfs
 sign_kernel_and_modules
+cleanup

@@ -1,5 +1,7 @@
 #!/usr/bin/env bash
 
+echo "::group:: ===$(basename "$0")==="
+
 set -ouex pipefail
 
 # remove update tray icon
@@ -8,9 +10,11 @@ rm /etc/xdg/autostart/org.kde.discover.notifier.desktop || true
 # additional packages
 dnf5 -y install plasma-discover-rpm-ostree
 
-rm -vf /usr/share/applications/org.kde.kdebugsettings.desktop
-rm -vf /usr/share/applications/org.kde.khelpcenter.desktop
-rm -vf /usr/share/applications/org.kde.plasma-welcome.desktop
+rm -vf /usr/share/applications/org.kde.kdebugsettings.desktop || true
+rm -vf /usr/share/applications/org.kde.khelpcenter.desktop || true
+rm -vf /usr/share/applications/org.kde.plasma-welcome.desktop || true
+rm -vf /usr/share/applications/htop.desktop || true
+rm -vf /usr/share/applications/nvtop.desktop || true
 
 # wallpapers
 ln -sf /usr/share/wallpapers/kw-wallpaper.jxl /usr/share/backgrounds/default.jxl
