@@ -71,8 +71,10 @@ popd
 
 # remove stock kernels and modules
 for pkg in kernel kernel-core kernel-modules kernel-modules-core; do
-  rpm --erase $pkg --nodeps
+  dnf5 -y remove $pkg --nodeps
 done
+rm -rf /usr/lib/modules/*
+rm -rf /boot/*
 
 # install and lock cachy kernel
 packages=(
@@ -81,10 +83,8 @@ packages=(
   kernel-cachyos-lto-devel-matched
   kernel-cachyos-lto-modules
 )
-rm -rf "/usr/lib/modules/$(ls /usr/lib/modules | head -n1)"
 dnf5 -y install "${packages[@]}"
 dnf5 versionlock add "${packages[@]}"
-rm -rf /boot/*
 
 ###
 ### services
