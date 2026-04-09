@@ -71,7 +71,7 @@ popd
 
 # remove stock kernels and modules
 for pkg in kernel kernel-core kernel-modules kernel-modules-core; do
-  dnf5 -y remove $pkg --nodeps
+  dnf5 -y remove $pkg
 done
 rm -rf /usr/lib/modules/*
 rm -rf /boot/*
