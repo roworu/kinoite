@@ -18,9 +18,9 @@ setopt autocd
 
 # ls
 # https://github.com/eza-community/eza
-alias ls="eza -F --icons=auto --color=always --group-directories-first"
-alias ll="eza -alF --git --icons --color=always --group-directories-first"
-alias la="eza -aF --git --icons --color=always --group-directories-first"
+alias ls="eza -F --color=always --group-directories-first"
+alias ll="eza -alF --git --color=always --group-directories-first"
+alias la="eza -aF --git --color=always --group-directories-first"
 alias l="ls"
 
 # cat
