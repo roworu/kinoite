@@ -1,7 +1,19 @@
-autoload -Uz colors && colors
+### omz
+
+ZSH_THEME=""
+export ZSH="$HOME/.oh-my-zsh"
+plugins=(zsh-autosuggestions zsh-syntax-highlighting git)
+source $ZSH/oh-my-zsh.sh
 
 ### prompt
+ZSH_THEME_GIT_PROMPT_PREFIX="("
+ZSH_THEME_GIT_PROMPT_SUFFIX=")"
+ZSH_THEME_GIT_PROMPT_DIRTY="*"
+ZSH_THEME_GIT_PROMPT_CLEAN=""
+# left prompt
 PROMPT='%F{green}%n%f@%m %~ > '
+# right prompt (git branch info)
+RPS1='$(git_prompt_info)'
 
 ### history
 DISABLE_UNTRACKED_FILES_DIRTY="true"

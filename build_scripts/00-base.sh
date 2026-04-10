@@ -18,22 +18,22 @@ dnf5 -y config-manager setopt "*fedora*".exclude="kernel-core-* kernel-modules-*
 dnf5 -y config-manager setopt "*updates*".exclude="kernel-core-* kernel-modules-* kernel-uki-virt-*"
 
 # shell
-dnf5 -y install zsh fastfetch
+dnf5 -y install zsh git
 
-ZSH_PATH=/usr/bin/zsh
+echo /usr/bin/zsh >> /etc/shells
+echo "SHELL=/usr/bin/zsh" >> /etc/default/useradd
 
-grep -qxF "$ZSH_PATH" /etc/shells || echo "$ZSH_PATH" >> /etc/shells
-
-if grep -q '^SHELL=' /etc/default/useradd; then
-  sed -i "s|^SHELL=.*|SHELL=${ZSH_PATH}|" /etc/default/useradd
-else
-  echo "SHELL=${ZSH_PATH}" >> /etc/default/useradd
-fi
+git clone https://github.com/ohmyzsh/ohmyzsh.git \
+    /etc/skel/.oh-my-zsh --depth=1
+git clone https://github.com/zsh-users/zsh-autosuggestions.git \
+    /etc/skel/.oh-my-zsh/plugins/zsh-autosuggestions --depth=1
+git clone https://github.com/zsh-users/zsh-syntax-highlighting.git \
+    /etc/skel/.oh-my-zsh/plugins/zsh-syntax-highlighting --depth=1
 
 # cli tools
 dnf5 -y install --nogpgcheck --repofrompath \
   'terra,https://repos.fyralabs.com/terra$releasever' terra-release
-dnf5 -y install eza bat ripgrep fd
+dnf5 -y install eza bat ripgrep fd fastfetch
 find /etc/yum.repos.d/ -maxdepth 1 -type f -name '*terra*.repo' -exec rm -f {} +
 
 # virtualization tools, for ui install virt-manager from flatpak
