@@ -92,6 +92,7 @@ dnf5 versionlock add "${packages[@]}"
 
 system_services=(
   podman.socket
+  flathub-setup.service
   systemd-resolved.service
   libvirtd.service
 )
