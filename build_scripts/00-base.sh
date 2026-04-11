@@ -55,7 +55,7 @@ install_nvidia_drivers() {
 
     KERNEL_VERSION=$(ls /usr/lib/modules | head -n1)
 
-    dnf5 config-manager addrepo --from-repofile=https://negativo17.org/repos/fedora-nvidia.repo
+    #dnf5 config-manager addrepo --from-repofile=https://negativo17.org/repos/fedora-nvidia.repo
     dnf5 config-manager setopt fedora-nvidia.enabled=0
     sed -i '/^enabled=/a\priority=90' /etc/yum.repos.d/fedora-nvidia.repo
 
