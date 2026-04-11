@@ -66,7 +66,7 @@ install_nvidia_drivers() {
     dnf5 -y install --enablerepo=fedora-nvidia "${nvidia_driver_packages[@]}"
     dnf5 versionlock add "${nvidia_driver_packages[@]}"
 
-    dnf5 config-manager addrepo --from-repofile=https://nvidia.github.io/libnvidia-container/stable/rpm/nvidia-container-toolkit.repo
+    # dnf5 config-manager addrepo --from-repofile=https://nvidia.github.io/libnvidia-container/stable/rpm/nvidia-container-toolkit.repo
     dnf5 config-manager setopt nvidia-container-toolkit.enabled=0
     dnf5 config-manager setopt nvidia-container-toolkit.gpgcheck=1
 
