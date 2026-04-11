@@ -8,14 +8,11 @@ shopt -s nullglob
 ###
 
 FEDORA_VERSION="$(rpm -E %fedora)"
-dnf5 config-manager setopt keepcache=1
 dnf5 -y copr enable bieszczaders/kernel-cachyos-lto "fedora-${FEDORA_VERSION}-x86_64"
 dnf5 -y copr enable bieszczaders/kernel-cachyos-addons "fedora-${FEDORA_VERSION}-x86_64"
 
 dnf5 -y config-manager setopt "*fedora*".exclude="kernel-core-* kernel-modules-* kernel-uki-virt-*"
 dnf5 -y config-manager setopt "*updates*".exclude="kernel-core-* kernel-modules-* kernel-uki-virt-*"
-
-dnf5 -y install zsh git
 
 ###
 ### kernel install
@@ -63,15 +60,41 @@ nvidia_driver_packages=(
 
 dnf5 -y install --enablerepo=fedora-nvidia "${nvidia_driver_packages[@]}"
 
+install_nvidia_drivers() {
 
-dnf5 -y remove firefox firefox-langpacks \
-    plasma-welcome plasma-drkonqi plasma-welcome-fedora plasma-discover-kns kcharselect
+    nvidia_driver_packages=(
+      nvidia-driver-cuda
+      libnvidia-fbc
+      libva-nvidia-driver
+      nvidia-driver
+      nvidia-modprobe
+      nvidia-persistenced
+      nvidia-settings
+    )
 
-# remove update tray icon
-rm -vf /etc/xdg/autostart/org.kde.discover.notifier.desktop
+    KERNEL_VERSION=$(ls /usr/lib/modules | head -n1)
 
-# remove some apps from start menu
-rm -vf /usr/share/applications/org.kde.kdebugsettings.desktop
-rm -vf /usr/share/applications/org.kde.khelpcenter.desktop
-rm -vf /usr/share/applications/htop.desktop
-rm -vf /usr/share/applications/nvtop.desktop
+    dnf5 config-manager addrepo --from-repofile=https://negativo17.org/repos/fedora-nvidia.repo
+    dnf5 config-manager setopt fedora-nvidia.enabled=0
+    sed -i '/^enabled=/a\priority=90' /etc/yum.repos.d/fedora-nvidia.repo
+
+    dnf5 -y install akmods
+    dnf5 -y install --setopt=tsflags=noscripts --enablerepo=fedora-nvidia akmod-nvidia
+
+    mkdir -p /var/tmp
+    chmod 1777 /var/tmp
+
+    akmods --force --kernels "${KERNEL_VERSION}" --kmod "nvidia"
+    dnf5 -y install --enablerepo=fedora-nvidia "${nvidia_driver_packages[@]}"
+    dnf5 versionlock add "${nvidia_driver_packages[@]}"
+
+    dnf5 config-manager addrepo --from-repofile=https://nvidia.github.io/libnvidia-container/stable/rpm/nvidia-container-toolkit.repo
+    dnf5 config-manager setopt nvidia-container-toolkit.enabled=0
+    dnf5 config-manager setopt nvidia-container-toolkit.gpgcheck=1
+
+    dnf5 -y install --enablerepo=nvidia-container-toolkit \
+        nvidia-container-toolkit
+
+}
+
+install_nvidia_drivers
