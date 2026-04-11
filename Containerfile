@@ -10,7 +10,6 @@ COPY build_scripts /
 FROM ghcr.io/ublue-os/kinoite-main:${FEDORA_VERSION} AS kyawthuite
 
 COPY system_files/base /
-COPY system_files/plasma /
 
 RUN --mount=type=bind,from=ctx,source=/,target=/ctx \
     --mount=type=tmpfs,dst=/var \
@@ -39,8 +38,6 @@ RUN bootc container lint
 FROM ghcr.io/ublue-os/kinoite-nvidia:${FEDORA_VERSION} AS kyawthuite-nvidia
 
 COPY system_files/base /
-COPY system_files/plasma /
-COPY system_files/nvidia /
 
 COPY --from=ghcr.io/ublue-os/akmods-nvidia-open:main-${FEDORA_VERSION}-x86_64 / /tmp/akmods-nvidia
 RUN find /tmp/akmods-nvidia
