@@ -8,6 +8,7 @@ shopt -s nullglob
 ###
 
 FEDORA_VERSION="$(rpm -E %fedora)"
+dnf5 config-manager setopt keepcache=1
 dnf5 -y copr enable bieszczaders/kernel-cachyos-lto "fedora-${FEDORA_VERSION}-x86_64"
 dnf5 -y copr enable bieszczaders/kernel-cachyos-addons "fedora-${FEDORA_VERSION}-x86_64"
 
