@@ -8,14 +8,11 @@ shopt -s nullglob
 ###
 
 FEDORA_VERSION="$(rpm -E %fedora)"
-dnf5 config-manager setopt keepcache=1
 dnf5 -y copr enable bieszczaders/kernel-cachyos-lto "fedora-${FEDORA_VERSION}-x86_64"
 dnf5 -y copr enable bieszczaders/kernel-cachyos-addons "fedora-${FEDORA_VERSION}-x86_64"
 
 dnf5 -y config-manager setopt "*fedora*".exclude="kernel-core-* kernel-modules-* kernel-uki-virt-*"
 dnf5 -y config-manager setopt "*updates*".exclude="kernel-core-* kernel-modules-* kernel-uki-virt-*"
-
-dnf5 -y install zsh git
 
 ###
 ### kernel install
@@ -42,15 +39,3 @@ packages=(
 )
 dnf5 -y install "${packages[@]}"
 dnf5 versionlock add "${packages[@]}"
-
-dnf5 -y remove firefox firefox-langpacks \
-    plasma-welcome plasma-drkonqi plasma-welcome-fedora plasma-discover-kns kcharselect
-
-# remove update tray icon
-rm -vf /etc/xdg/autostart/org.kde.discover.notifier.desktop
-
-# remove some apps from start menu
-rm -vf /usr/share/applications/org.kde.kdebugsettings.desktop
-rm -vf /usr/share/applications/org.kde.khelpcenter.desktop
-rm -vf /usr/share/applications/htop.desktop
-rm -vf /usr/share/applications/nvtop.desktop
