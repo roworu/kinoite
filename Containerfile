@@ -7,7 +7,7 @@ COPY build_scripts /
 ### base plasma image
 ###
 
-FROM ghcr.io/ublue-os/kinoite-main:${FEDORA_VERSION} AS kyawthuite
+FROM ghcr.io/ublue-os/kinoite-main:${FEDORA_VERSION} AS kinoite
 
 COPY system_files/base /
 
@@ -35,7 +35,7 @@ RUN bootc container lint
 ### plasma-nvidia desktop image
 ###
 
-FROM ghcr.io/ublue-os/kinoite-nvidia:${FEDORA_VERSION} AS kyawthuite-nvidia
+FROM ghcr.io/ublue-os/kinoite-nvidia:${FEDORA_VERSION} AS kinoite-nvidia
 
 COPY system_files/base /
 
