@@ -52,6 +52,8 @@ install_nvidia_drivers() {
       nvidia-persistenced
       nvidia-settings
     )
+    mkdir -p /var/tmp
+    chmod 1777 /var/tmp
 
     KERNEL_VERSION=$(ls /usr/lib/modules | head -n1)
 
@@ -70,8 +72,9 @@ install_nvidia_drivers() {
     dnf5 config-manager setopt nvidia-container-toolkit.enabled=0
     dnf5 config-manager setopt nvidia-container-toolkit.gpgcheck=1
 
-    dnf5 -y install --enablerepo=nvidia-container-toolkit \
-        nvidia-container-toolkit
+    dnf5 -y install --enablerepo=nvidia-container-toolkit nvidia-container-toolkit
+
+    cat /var/cache/akmods/nvidia/*
 
 }
 
