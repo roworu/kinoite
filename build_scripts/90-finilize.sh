@@ -7,9 +7,6 @@ KERNEL_VERSION=$(ls /usr/lib/modules | head -n1)
 KERNEL_IMAGE="/usr/lib/modules/$KERNEL_VERSION/vmlinuz"
 SIGN_DIR="/secureboot"
 
-mkdir -p /var/tmp || true
-chmod 1777 /var/tmp || true
-
 # 2) sign kernel + modules
 sign_kernel_and_modules() {
   # install required tools
