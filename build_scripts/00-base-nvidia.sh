@@ -41,24 +41,6 @@ packages=(
 dnf5 -y install "${packages[@]}"
 dnf5 versionlock add "${packages[@]}"
 
-dnf5 -y install akmods
-dnf5 -y install --setopt=tsflags=noscripts --enablerepo=fedora-nvidia akmod-nvidia
-KERNEL_VERSION=$(ls /usr/lib/modules | head -n1)
-akmods --force --kernels "${KERNEL_VERSION}" --kmod "nvidia"
-
-
-nvidia_driver_packages=(
-    # nvidia specific packages
-    nvidia-driver-cuda
-    libnvidia-fbc
-    libva-nvidia-driver
-    nvidia-driver
-    nvidia-modprobe
-    nvidia-persistenced
-    nvidia-settings
-)
-
-dnf5 -y install --enablerepo=fedora-nvidia "${nvidia_driver_packages[@]}"
 
 install_nvidia_drivers() {
 
