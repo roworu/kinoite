@@ -34,12 +34,13 @@ RUN bootc container lint
 ###
 ARG FEDORA_VERSION=43
 FROM ghcr.io/ublue-os/kinoite-nvidia:${FEDORA_VERSION} AS kinoite-nvidia
-ARG FEDORA_VERSION
 COPY system_files/base /
 
+ARG FEDORA_VERSION
 COPY --from=ghcr.io/ublue-os/akmods-nvidia-open:main-${FEDORA_VERSION}-x86_64 / /tmp/akmods-nvidia
 RUN find /tmp/akmods-nvidia
 
+ARG FEDORA_VERSION
 RUN dnf5 -y copr enable bieszczaders/kernel-cachyos-lto "fedora-${FEDORA_VERSION}-x86_64" \
     dnf5 -y copr enable bieszczaders/kernel-cachyos-addons "fedora-${FEDORA_VERSION}-x86_64" \
     dnf5 -y config-manager setopt "*fedora*".exclude="kernel-core-* kernel-modules-* kernel-uki-virt-*" \
