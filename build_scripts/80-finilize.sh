@@ -41,7 +41,7 @@ sign_kernel_and_modules() {
       sha512 "$SIGN_DIR/MOK.key" "$SIGN_DIR/MOK.pem" "$uncompressed" || true
 
     # 3) cleanup compressed original
-    rm -f "$comp"
+    rm -fv "$comp"
 
     # 4) recompress
     if xz -z "$uncompressed"; then
@@ -52,7 +52,7 @@ sign_kernel_and_modules() {
   done
 
   # remove private key after signing
-  rm -f "$SIGN_DIR/MOK.key"
+  rm -fv "$SIGN_DIR/MOK.key"
 }
 
 build_initramfs() {

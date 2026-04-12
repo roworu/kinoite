@@ -116,7 +116,7 @@ jobs:
               | select(.conclusion == "success")
             ] | length + 1' \
             "$RUNS_JSON")"
-          rm -f "$RUNS_JSON"
+          rm -fv "$RUNS_JSON"
 
           echo "daily_sequence=${DAILY_SEQUENCE}" >> "$GITHUB_OUTPUT"
           echo "date_tag=${TAG_DATE}.${DAILY_SEQUENCE}" >> "$GITHUB_OUTPUT"
