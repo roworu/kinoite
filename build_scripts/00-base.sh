@@ -80,7 +80,6 @@ if [ "${INSTALL_NVIDIA:-}" = "TRUE" ]; then
   install_nvidia_drivers
 fi
 
-
 ###
 ### change sign key in ujust
 ###

@@ -47,36 +47,6 @@ jobs:
 
     steps:
 
-      - name: Check if /mnt is there
-        id: check_mnt
-        run: |
-          if sudo mountpoint /mnt; then
-            echo "mnt_is_there=1" >>$GITHUB_OUTPUT
-          else
-            echo "mnt_is_there=0" >>$GITHUB_OUTPUT
-          fi
-
-      - name: Free Disk Space (Ubuntu)
-        if: ${{ steps.check_mnt.outputs.mnt_is_there == '1' }}
-        uses: jlumbroso/free-disk-space@54081f138730dfa15788a46383842cd2f914a1be # v1.3.1
-
-      - name: Change image name depending on build flavor
-        env:
-          BUILD_FLAVOR: ${{ matrix.flavor }}
-        run: |
-          if [ "${BUILD_FLAVOR}" != "" ] ; then
-            echo "IMAGE_NAME=${IMAGE_NAME}-${{ matrix.flavor }}" >> $GITHUB_ENV
-          fi
-
-      - name: Lower case image variables
-        run: |
-          echo "IMAGE_REGISTRY=${IMAGE_REGISTRY,,}" >> ${GITHUB_ENV}
-          echo "IMAGE_NAME=${IMAGE_NAME,,}" >> ${GITHUB_ENV}
-
-      - name: Set tag prefix
-        run: |
-          echo "TAG_PREFIX=${{ github.ref_name == 'edge' && 'edge.' || '' }}" >> $GITHUB_ENV
-
       - name: Checkout
         uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6
 
@@ -127,10 +97,10 @@ jobs:
         id: metadata
         with:
           tags: |
-            type=raw,value=${{ env.TAG_PREFIX }}${{ steps.build_seq.outputs.date_tag }}
-            type=raw,value=${{ env.TAG_PREFIX }}${{ env.DEFAULT_TAG }}
-            type=raw,value=${{ env.TAG_PREFIX }}${{ env.FEDORA_VERSION }}
-            type=raw,value=${{ env.TAG_PREFIX }}${{ steps.build_seq.outputs.version_tag }}
+            type=raw,value=${{ steps.build_seq.outputs.date_tag }}
+            type=raw,value=${{ env.DEFAULT_TAG }}
+            type=raw,value=${{ env.FEDORA_VERSION }}
+            type=raw,value=${{ steps.build_seq.outputs.version_tag }}
             type=sha,enable=${{ github.event_name == 'pull_request' }}
             type=ref,event=pr
           labels: |

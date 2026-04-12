@@ -80,10 +80,6 @@ build_initramfs() {
   chmod 0600 "/usr/lib/modules/$KERNEL_VERSION/initramfs.img"
 }
 
-build_initramfs
-sign_kernel_and_modules
-
-
 cleanup() {
 
     dnf5 -y clean all
@@ -98,5 +94,6 @@ cleanup() {
 
 }
 
-
+build_initramfs
+sign_kernel_and_modules
 cleanup
