@@ -93,7 +93,7 @@ JUST_DEFAULT_FILE=/usr/share/ublue-os/just/00-default.just
 if [[ -f "${JUST_DEFAULT_FILE}" ]]; then
   sed -i '/^enroll-secure-boot-key:/,/^$/ {
     s|ENROLLMENT_PASSWORD="universalblue"|ENROLLMENT_PASSWORD="password"|
-    s|SECUREBOOT_KEY=/etc/pki/akmods/certs/akmods-ublue.der|SECUREBOOT_KEY=/etc/secureboot/MOK.der|
+    s|SECUREBOOT_KEY=/etc/pki/akmods/certs/akmods-ublue.der|SECUREBOOT_KEY=/secureboot/MOK.der|
     s|"universalblue"|"password"|g
   }' "${JUST_DEFAULT_FILE}"
 fi
