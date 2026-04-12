@@ -175,6 +175,8 @@ jobs:
           BUILD_FLAVOR: ${{ matrix.flavor }}
           EVENT_NAME: ${{ github.event_name }}
           REF_NAME: ${{ github.ref_name }}
+          IMAGE_REGISTRY: ${{ env.IMAGE_REGISTRY }}
+          IMAGE_NAME: ${{ env.IMAGE_NAME }}
         run: |
           set -euo pipefail
 
@@ -185,16 +187,24 @@ jobs:
 
           DNF_CACHE_KEY="buildah-${CACHE_FLAVOR}"
           STORAGE_CACHE_KEY="buildah-storage-${CACHE_FLAVOR}"
+          REMOTE_CACHE_REPO="${IMAGE_REGISTRY}/${IMAGE_NAME}-buildcache"
           ALLOW_CACHE_WRITE="false"
+          USE_REMOTE_CACHE="false"
 
           # PR caches are not written to avoid replacing branch caches.
           if [ "${EVENT_NAME}" != "pull_request" ] && [ "${REF_NAME}" = "main" ]; then
             ALLOW_CACHE_WRITE="true"
           fi
 
+          if [ "${EVENT_NAME}" != "pull_request" ]; then
+            USE_REMOTE_CACHE="true"
+          fi
+
           echo "dnf_cache_key=${DNF_CACHE_KEY}" >> "$GITHUB_OUTPUT"
           echo "storage_cache_key=${STORAGE_CACHE_KEY}" >> "$GITHUB_OUTPUT"
+          echo "remote_cache_repo=${REMOTE_CACHE_REPO}" >> "$GITHUB_OUTPUT"
           echo "allow_cache_write=${ALLOW_CACHE_WRITE}" >> "$GITHUB_OUTPUT"
+          echo "use_remote_cache=${USE_REMOTE_CACHE}" >> "$GITHUB_OUTPUT"
 
       - name: Prepare Buildah storage path permissions for cache restore
         run: |
@@ -215,14 +225,42 @@ jobs:
           path: /var/lib/containers/storage
           key: ${{ steps.cache-prep.outputs.storage_cache_key }}
 
+      - name: Login to GHCR for Buildah remote cache
+        if: steps.cache-prep.outputs.use_remote_cache == 'true'
+        run: |
+          echo "${GITHUB_TOKEN}" | sudo buildah login --username "${GITHUB_ACTOR}" --password-stdin ghcr.io
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          GITHUB_ACTOR: ${{ github.actor }}
+
       - name: Build Image
         id: build_image
+        env:
+          USE_REMOTE_CACHE: ${{ steps.cache-prep.outputs.use_remote_cache }}
+          ALLOW_CACHE_WRITE: ${{ steps.cache-prep.outputs.allow_cache_write }}
+          REMOTE_CACHE_REPO: ${{ steps.cache-prep.outputs.remote_cache_repo }}
         run: |
-          sudo -E buildah build \
-            --target ${{ env.IMAGE_NAME }} \
-            --file Containerfile \
-            --build-arg-file build_args.txt \
-            --tag raw-img .
+          set -euo pipefail
+
+          BUILD_CMD=(
+            sudo -E buildah build
+            --layers
+            --target "${{ env.IMAGE_NAME }}"
+            --file Containerfile
+            --build-arg-file build_args.txt
+            --tag raw-img
+          )
+
+          if [ "${USE_REMOTE_CACHE}" = "true" ]; then
+            BUILD_CMD+=(--cache-from "${REMOTE_CACHE_REPO}")
+          fi
+
+          if [ "${ALLOW_CACHE_WRITE}" = "true" ]; then
+            BUILD_CMD+=(--cache-to "${REMOTE_CACHE_REPO}")
+          fi
+
+          BUILD_CMD+=(.)
+          "${BUILD_CMD[@]}"
 
       - name: Hack around permission issue caching
         id: cache-perms
@@ -281,7 +319,7 @@ jobs:
 
       - name: Load in podman and tag
         run: |
-          IMAGE=$(podman pull ${{ steps.rechunk.outputs.ref }})
+          IMAGE=$(podman pull --quiet ${{ steps.rechunk.outputs.ref }})
           sudo rm -rf ${{ steps.rechunk.outputs.output }}
           for tag in ${{ steps.metadata.outputs.tags }}; do
             podman tag $IMAGE "${{ env.IMAGE_REGISTRY }}/${{ env.IMAGE_NAME }}:$tag"
