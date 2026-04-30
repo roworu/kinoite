@@ -151,7 +151,7 @@ jobs:
       - name: Run integration tests
         run: |
           sudo podman save --format docker-archive raw-img -o /tmp/raw-img.tar
-          sudo podman build -f tests/Containerfile -t kinoite-test-runner testing
+          sudo podman build -f tests/Containerfile -t kinoite-test-runner tests
           sudo podman run --rm --privileged \
             -v /tmp/raw-img.tar:/input/raw-img.tar:ro \
             kinoite-test-runner \
