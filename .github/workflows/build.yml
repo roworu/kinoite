@@ -148,6 +148,15 @@ jobs:
             --build-arg-file build_args.txt \
             --tag raw-img .
 
+      - name: Run integration tests
+        run: |
+          sudo podman save --format docker-archive raw-img -o /tmp/raw-img.tar
+          sudo podman build -f tests/Containerfile -t kinoite-test-runner testing
+          sudo podman run --rm --privileged \
+            -v /tmp/raw-img.tar:/input/raw-img.tar:ro \
+            kinoite-test-runner \
+            "${{ matrix.flavor }}"
+
       - name: Run Rechunker
         id: rechunk
         uses: ublue-os/legacy-rechunk@a925083d9af7cb04b3e2a6e8c01bfa495f38b710 # v1.0.0
