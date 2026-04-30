@@ -82,10 +82,25 @@ build_initramfs() {
 
 cleanup() {
 
+    cleanup_packages=(
+      kernel-cachyos-lto-devel-matched
+      sbsigntools
+    )
+
+    if [ "${INSTALL_NVIDIA:-}" = "TRUE" ]; then
+      cleanup_packages+=(
+        akmods
+        akmod-nvidia
+      )
+    fi
+
+    dnf5 -y remove "${cleanup_packages[@]}"
     dnf5 -y clean all
 
     rm -rfv /etc/yum.repos.d/*cachyos*
+    rm -fv /etc/yum.repos.d/fedora-nvidia.repo
     rm -rfv /tmp/*
+    rm -rfv /var/tmp/*
     rm -rfv /var/log/dnf5.log
 
     # from 00-base.sh kernel installation
