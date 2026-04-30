@@ -14,6 +14,7 @@ config_toml=''
 ssh_key=''
 ssh_pub=''
 qcow2_image=''
+source_image_ref=''
 
 ###
 ### utility functions
@@ -26,6 +27,11 @@ log() {
 die() {
   echo "[!] $*" >&2
   exit 1
+}
+
+debug_cmd() {
+  log "$*"
+  "$@"
 }
 
 cleanup() {
@@ -75,12 +81,28 @@ build_image() {
   log "Loading container image"
 
   local loaded_image
-  loaded_image="$(podman load -i /input/raw-img.tar | awk -F': ' '/Loaded image:/ {print $2}' | tail -n1)"
+  local load_output
+  load_output="$(podman load -i /input/raw-img.tar 2>&1)"
+  echo "${load_output}" >&2
+  loaded_image="$(awk -F': ' '/Loaded image:/ {print $2}' <<< "${load_output}" | tail -n1)"
 
   [[ -z "${loaded_image}" ]] && die "Failed to load image archive"
 
   local candidate_image="test-target:latest"
-  podman tag "${loaded_image}" "${candidate_image}"
+  local candidate_archive="${workdir}/test-target.ociarchive"
+
+  debug_cmd podman tag "${loaded_image}" "${candidate_image}"
+  debug_cmd podman images --all --digests --no-trunc
+  debug_cmd podman image inspect "${loaded_image}"
+  debug_cmd podman image inspect "${candidate_image}"
+
+  log "Exporting test image to OCI archive"
+  debug_cmd podman save --format oci-archive -o "${candidate_archive}" "${candidate_image}"
+  debug_cmd ls -lh "${candidate_archive}"
+  debug_cmd tar -tf "${candidate_archive}"
+
+  source_image_ref="oci-archive:${candidate_archive}"
+  log "Using source image ref: ${source_image_ref}"
 
   log "Building qcow2 image"
 
@@ -90,14 +112,14 @@ build_image() {
     --pull=always \
     -v "${config_toml}:/config.toml:ro" \
     -v "${output_dir}:/output" \
-    -v /var/lib/containers/storage:/var/lib/containers/storage \
-    -v /run/containers/storage:/run/containers/storage \
+    -v "${candidate_archive}:${candidate_archive}:ro" \
     quay.io/centos-bootc/bootc-image-builder:latest \
+    --progress verbose \
     --type qcow2 \
     --rootfs btrfs \
     --use-librepo=True \
     --config /config.toml \
-    "${candidate_image}"
+    "${source_image_ref}"
 
   qcow2_image="${output_dir}/qcow2/disk.qcow2"
   [[ -f "${qcow2_image}" ]] || die "qcow2 image not produced"
