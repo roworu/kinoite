@@ -36,7 +36,6 @@ debug_cmd() {
 cleanup() {
   if [[ -n "${qemu_pid}" ]] && kill -0 "${qemu_pid}" >/dev/null 2>&1; then
     kill "${qemu_pid}" || true
-    wait "${qemu_pid}" || true
   fi
 
   [[ -n "${workdir}" ]] && rm -rf "${workdir}"
@@ -148,6 +147,7 @@ start_vm() {
     -pidfile "${workdir}/qemu.pid"
 
   qemu_pid="$(cat "${workdir}/qemu.pid")"
+  log "VM started with PID ${qemu_pid}"
 }
 
 ###
@@ -166,13 +166,26 @@ wait_for_ssh() {
     -p 2222
   )
 
-  for _ in $(seq 1 120); do
+  local attempt
+  for attempt in $(seq 1 120); do
     if ssh "${ssh_opts[@]}" integration@127.0.0.1 true >/dev/null 2>&1; then
-      log "SSH is ready"
+      log "SSH is ready after ${attempt} attempts"
       return 0
+    fi
+    if (( attempt % 12 == 0 )); then
+      log "SSH not ready yet, attempt ${attempt}/120"
     fi
     sleep 5
   done
+
+  log "VM serial log:"
+  cat "${serial_log}" >&2 || true
+  log "Checking if VM is still running"
+  if [[ -n "${qemu_pid}" ]] && kill -0 "${qemu_pid}" >/dev/null 2>&1; then
+    log "VM process ${qemu_pid} is running"
+  else
+    log "VM process not running or pid unknown"
+  fi
 
   die "SSH did not become ready"
 }
