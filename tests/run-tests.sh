@@ -91,6 +91,7 @@ build_image() {
     -v "${config_toml}:/config.toml:ro" \
     -v "${output_dir}:/output" \
     -v /var/lib/containers/storage:/var/lib/containers/storage \
+    -v /run/containers/storage:/run/containers/storage \
     quay.io/centos-bootc/bootc-image-builder:latest \
     --type qcow2 \
     --rootfs btrfs \
