@@ -20,8 +20,10 @@ printf '%s\n' '#!/bin/sh' 'exit 0' > 50-dracut.install
 chmod +x  05-rpmostree.install 50-dracut.install
 popd
 
-for pkg in kernel kernel-core kernel-modules kernel-modules-core; do
-  dnf5 -y remove $pkg
+for pkg in kernel kernel-core kernel-modules kernel-modules-core kernel-modules-extra kernel-uki-virt; do
+  if rpm -q "$pkg" >/dev/null 2>&1; then
+    dnf5 -y remove "$pkg"
+  fi
 done
 rm -rf /usr/lib/modules/*
 rm -rf /boot/*
@@ -35,7 +37,6 @@ packages=(
 
 dnf5 -y install "${packages[@]}"
 dnf5 versionlock add "${packages[@]}"
-dnf5 -y install virtualbox-guest-additions # as it removed with `kernel-core` uninstalling
 
 ###
 ### nvidia drivers install
@@ -61,17 +62,17 @@ install_nvidia_drivers() {
     dnf5 config-manager setopt fedora-nvidia.enabled=0
     sed -i '/^enabled=/a\priority=90' /etc/yum.repos.d/fedora-nvidia.repo
 
+    # install and build akmods manually
     dnf5 -y install akmods
     dnf5 -y install --setopt=tsflags=noscripts --enablerepo=fedora-nvidia akmod-nvidia
-
     akmods --force --kernels "${KERNEL_VERSION}" --kmod "nvidia"
     dnf5 -y install --enablerepo=fedora-nvidia "${nvidia_driver_packages[@]}"
     dnf5 versionlock add "${nvidia_driver_packages[@]}"
 
+    # add nvidia-container
     dnf5 config-manager addrepo --from-repofile=https://nvidia.github.io/libnvidia-container/stable/rpm/nvidia-container-toolkit.repo
     dnf5 config-manager setopt nvidia-container-toolkit.enabled=0
     dnf5 config-manager setopt nvidia-container-toolkit.gpgcheck=1
-
     dnf5 -y install --enablerepo=nvidia-container-toolkit nvidia-container-toolkit
 
 }
