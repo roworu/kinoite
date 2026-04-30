@@ -149,8 +149,8 @@ jobs:
             --tag raw-img .
 
       - name: Run integration tests
-        # bypass errors for now..
-        continue-on-error: true
+        # bypass errors
+        # continue-on-error: true
         run: |
           sudo podman save --format docker-archive raw-img -o /tmp/raw-img.tar
           sudo podman build -f tests/Containerfile -t kinoite-test-runner tests
