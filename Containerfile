@@ -1,10 +1,12 @@
+ARG FEDORA_VERSION=43
+
 FROM scratch AS ctx
 COPY build_scripts /
 
 ###
 ### base plasma image
 ###
-FROM ghcr.io/ublue-os/kinoite-main:43 AS kinoite
+FROM ghcr.io/ublue-os/kinoite-main:${FEDORA_VERSION} AS kinoite
 COPY system_files/base /
 
 RUN --mount=type=bind,from=ctx,source=/,target=/ctx \
@@ -24,7 +26,7 @@ RUN bootc container lint
 ###
 ### plasma-nvidia image
 ###
-FROM ghcr.io/ublue-os/kinoite-main:43 AS kinoite-nvidia
+FROM ghcr.io/ublue-os/kinoite-main:${FEDORA_VERSION} AS kinoite-nvidia
 COPY system_files/base /
 COPY system_files/nvidia /
 
