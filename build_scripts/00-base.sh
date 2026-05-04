@@ -11,8 +11,8 @@ FEDORA_VERSION="$(rpm -E %fedora)"
 dnf5 -y copr enable bieszczaders/kernel-cachyos-lto "fedora-${FEDORA_VERSION}-x86_64"
 dnf5 -y copr enable bieszczaders/kernel-cachyos-addons "fedora-${FEDORA_VERSION}-x86_64"
 
-dnf5 -y config-manager setopt "*fedora*".exclude="kernel-core-* kernel-modules-* kernel-uki-virt-*"
-dnf5 -y config-manager setopt "*updates*".exclude="kernel-core-* kernel-modules-* kernel-uki-virt-*"
+dnf5 -y config-manager setopt '*fedora*.exclude=kernel-core-* kernel-modules-* kernel-uki-virt-*'
+dnf5 -y config-manager setopt '*updates*.exclude=kernel-core-* kernel-modules-* kernel-uki-virt-*'
 
 pushd /usr/lib/kernel/install.d
 printf '%s\n' '#!/bin/sh' 'exit 0' > 05-rpmostree.install
@@ -25,8 +25,8 @@ for pkg in kernel kernel-core kernel-modules kernel-modules-core kernel-modules-
     dnf5 -y remove "$pkg"
   fi
 done
-rm -rf /usr/lib/modules/*
-rm -rf /boot/*
+find /usr/lib/modules -mindepth 1 -maxdepth 1 -exec rm -rf -- {} +
+find /boot -mindepth 1 -maxdepth 1 -exec rm -rf -- {} +
 
 packages=(
   kernel-cachyos-lto
@@ -56,7 +56,7 @@ install_nvidia_drivers() {
     mkdir -p /var/tmp
     chmod 1777 /var/tmp
 
-    KERNEL_VERSION=$(ls /usr/lib/modules | head -n1)
+    KERNEL_VERSION=$(find /usr/lib/modules -mindepth 1 -maxdepth 1 -type d -printf '%f\n' -quit)
 
     dnf5 config-manager addrepo --from-repofile=https://negativo17.org/repos/fedora-nvidia.repo
     dnf5 config-manager setopt fedora-nvidia.enabled=0

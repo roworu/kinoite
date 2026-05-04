@@ -2,7 +2,7 @@
 
 set -ouex pipefail
 
-KERNEL_VERSION=$(ls /usr/lib/modules | head -n1)
+KERNEL_VERSION=$(find /usr/lib/modules -mindepth 1 -maxdepth 1 -type d -printf '%f\n' -quit)
 KERNEL_IMAGE="/usr/lib/modules/$KERNEL_VERSION/vmlinuz"
 
 mkdir -p /var/tmp
