@@ -68,15 +68,7 @@ def test_plasma_desktop_packages_installed(ssh_command):
 
 
 def test_xdg_user_dirs_exist(ssh_command):
-    dirs = " ".join(EXPECTED_XDG_DIRS)
-    result = ssh_command(
-        f"missing=0; for dir in {dirs}; do "
-        f"if ! test -d \"$HOME/$dir\"; then "
-        f"printf 'missing xdg dir: %s\\n' \"$dir\"; missing=1; "
-        f"fi; "
-        f"done; "
-        f"exit \"$missing\""
-    )
-
-    assert result.returncode == 0, \
-        f"Expected XDG user directories to exist: {dirs}. Missing directories: {result.stdout}"
+    for xdg_dir in EXPECTED_XDG_DIRS:
+        result = ssh_command(f"test -d \"$HOME/{xdg_dir}\"")
+        assert result.returncode == 0, \
+            f"Expected XDG user directory to exist: $HOME/{xdg_dir}. Full response: {result}"
