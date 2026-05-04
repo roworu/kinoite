@@ -22,9 +22,9 @@ concurrency:
 jobs:
   run_tests:
     name: Run tests on final OS image
-    if: >-
-      github.event_name == 'workflow_dispatch' ||
-      github.event.workflow_run.conclusion == 'success'
+#    if: >-
+#      github.event_name == 'workflow_dispatch' ||
+#      github.event.workflow_run.conclusion == 'success'
 
     runs-on: ubuntu-24.04
 
@@ -44,7 +44,18 @@ jobs:
 
       - name: Prepare dependencies
         run: |
-          sudo apt update && sudo apt install just podman
+          sudo apt update && sudo apt install -y podman
+
+          just_version="1.50.0"
+          just_archive="just-${just_version}-x86_64-unknown-linux-musl.tar.gz"
+          just_url="https://github.com/casey/just/releases/download/${just_version}/${just_archive}"
+          just_sha256="5dc713f049e174e22de41fd06292a26c9b90f2d37c1be9390d2082fe6928b376"
+
+          curl --fail --location --show-error --silent --output "${just_archive}" "${just_url}"
+          echo "${just_sha256}  ${just_archive}" | sha256sum --check
+          tar -xzf "${just_archive}" just
+          chmod +x just
+          sudo install -m 0755 just /usr/local/bin/just
 
       - name: Cleanup
         run: |
