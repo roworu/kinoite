@@ -62,17 +62,17 @@ jobs:
 
       - name: Build image
         run: |
-          just build
+          sudo just build
 
       - name: Build VM image
         run: |
-          just build-qcow2
+          sudo just build-qcow2
 
       - name: Run VM image
         env:
           ENABLE_TEST_SSHD: "TRUE"
         run: |
-          nohup just run-vm-qcow2 > vm.log 2>&1 &
+          nohup sudo just run-vm-qcow2 > vm.log 2>&1 &
 
       - name: Build test runner
         run: |
