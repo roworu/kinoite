@@ -2,13 +2,12 @@
 name: Run tests on final OS image
 on:
 
-#  workflow_run:
-#    workflows:
-#      - Build container image
-#    branches:
-#      - main
-#    types:
-#      - completed
+  push:
+    paths:
+      - ".github/workflows/tests.yml"
+  pull_request:
+    paths:
+      - ".github/workflows/tests.yml"
   workflow_dispatch:
 
 env:
@@ -133,3 +132,7 @@ jobs:
 
           summary.write_text("\n".join(lines), encoding="utf-8")
           PY
+
+      - name: Debug
+        run: |
+          cat vm.log
