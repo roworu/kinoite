@@ -14,6 +14,10 @@ on:
       - "**.md"
       - "**.txt"
       - ".gitignore"
+      - ".github/act/*"
+      - ".github/workdlows/tests.yml"
+      - ".github/workdlows/cleanup.yml"
+
   workflow_dispatch:
 
 env:
