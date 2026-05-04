@@ -61,6 +61,10 @@ jobs:
           just clean && just sudo-clean
 
       - name: Build VM image
+        run: |
+          just build-qcow2
+
+      - name: Run VM image
         env:
           ENABLE_TEST_SSHD: "TRUE"
         run: |
