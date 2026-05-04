@@ -61,8 +61,10 @@ jobs:
           just clean && just sudo-clean
 
       - name: Build image
+        env:
+          ENABLE_TEST_SSHD: "TRUE"
         run: |
-          sudo just build
+          sudo env ENABLE_TEST_SSHD="${ENABLE_TEST_SSHD}" just build
 
       - name: Build VM image
         run: |
@@ -70,9 +72,9 @@ jobs:
 
       - name: Run VM image
         env:
-          ENABLE_TEST_SSHD: "TRUE"
+          VM_GPU: "FALSE"
         run: |
-          nohup sudo just run-vm-qcow2 > vm.log 2>&1 &
+          nohup sudo env VM_GPU="${VM_GPU}" just run-vm-qcow2 > vm.log 2>&1 &
 
       - name: Build test runner
         run: |

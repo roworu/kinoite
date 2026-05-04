@@ -4,6 +4,7 @@ export image_name := env("IMAGE_NAME", "kinoite")
 export default_tag := env("DEFAULT_TAG", "latest")
 export bib_image := env("BIB_IMAGE", "quay.io/centos-bootc/bootc-image-builder:latest")
 export enable_test_sshd := env("ENABLE_TEST_SSHD", "FALSE")
+export vm_gpu := env("VM_GPU", "TRUE")
 
 alias build-vm := build-qcow2
 alias rebuild-vm := rebuild-qcow2
@@ -244,7 +245,17 @@ _run-vm $target_image $tag $type $config:
     run_args+=(--env "RAM_SIZE=8G")
     run_args+=(--env "DISK_SIZE=64G")
     run_args+=(--env "TPM=Y")
-    run_args+=(--env "GPU=Y")
+    case "${vm_gpu,,}" in
+        1|true|yes|y)
+            run_args+=(--env "GPU=Y")
+            ;;
+        0|false|no|n)
+            ;;
+        *)
+            echo "Unsupported VM_GPU value: ${vm_gpu}" >&2
+            exit 1
+            ;;
+    esac
     run_args+=(--device=/dev/kvm)
     run_args+=(--volume "${PWD}/${image_file}":"/boot.${type}")
     run_args+=(docker.io/qemux/qemu)
