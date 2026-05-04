@@ -71,4 +71,4 @@ def test_xdg_user_dirs_exist(ssh_command):
     for xdg_dir in EXPECTED_XDG_DIRS:
         result = ssh_command(f"test -d \"$HOME/{xdg_dir}\"")
         assert result.returncode == 0, \
-            f"Expected XDG user directory to exist: $HOME/{xdg_dir}. Full response: {result}"
+            f"Missing XDG user directory: $HOME/{xdg_dir}. Full response: {result}"
