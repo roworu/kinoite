@@ -5,11 +5,11 @@ on:
   push:
     paths:
       - ".github/workflows/tests.yml"
-      - "tests/*"
+      - "tests/**"
   pull_request:
     paths:
       - ".github/workflows/tests.yml"
-      - "tests/*"
+      - "tests/**"
   workflow_dispatch:
 
 env:
