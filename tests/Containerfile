@@ -15,4 +15,4 @@ COPY tests/src/ ./
 
 ENTRYPOINT ["uv", "run", "pytest"]
 # only test plasma for now:
-CMD ["--junitxml=/tmp/test-results/junit.xml", "-m", "plasma"]
+CMD ["--junitxml=/tmp/test-results/junit.xml"]

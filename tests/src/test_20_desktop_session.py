@@ -46,12 +46,10 @@ def test_sddm_is_selected_display_manager(ssh_command):
         f"display-manager.service expected to point to sddm.service, actual target: {actual_unit}"
 
 
-@pytest.mark.plasma
 def test_plasma_de_packages_installed(ssh_command):
     for package in PLASMA_DE_PACKAGES:
         ssh_command(f"rpm -q {package}")
 
-@pytest.mark.gnome
 def test_gnome_de_packages_installed(ssh_command):
     for package in GNOME_DE_PACKAGES:
         ssh_command(f"rpm -q {package}")
