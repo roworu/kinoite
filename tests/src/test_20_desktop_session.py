@@ -22,7 +22,7 @@ def test_display_manager_is_active(ssh_command):
 
 
 def test_sddm_is_active(ssh_command):
-    result = ssh_command("systemctl is-active sddm.service")
+    result = ssh_command("systemctl is-active plasmalogin.service")
     actual_state = result.stdout.strip()
 
     assert result.returncode == 0, \
@@ -39,8 +39,8 @@ def test_sddm_is_selected_display_manager(ssh_command):
     assert result.returncode == 0, \
         f"Command returned bad returncode: {result.returncode}. Full response: {result}"
 
-    assert actual_unit.endswith("/sddm.service"), \
-        f"display-manager.service expected to point to sddm.service, actual target: {actual_unit}"
+    assert actual_unit.endswith("/plasmalogin.service"), \
+        f"display-manager.service expected to point to plasmalogin.service, actual target: {actual_unit}"
 
 
 def test_plasma_de_packages_installed(ssh_command):

@@ -1,7 +1,7 @@
 PLASMA_DE_PACKAGES = [
     "plasma-desktop",
     "plasma-workspace",
-    "sddm",
+    "plasmalogin",
     "xdg-user-dirs",
 ]
 
