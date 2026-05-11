@@ -85,21 +85,3 @@ install_nvidia_drivers() {
 if [ "${INSTALL_NVIDIA:-}" = "TRUE" ]; then
 	install_nvidia_drivers
 fi
-
-###
-### change sign key in ujust
-###
-
-# we need to change keys used in /usr/share/ublue-os/just/00-default.just
-# to own, as we can't sign new kernel with ublue keys.
-# its dirty but, yeah.
-
-JUST_DEFAULT_FILE=/usr/share/ublue-os/just/00-default.just
-if [[ -f "${JUST_DEFAULT_FILE}" ]]; then
-	sed -i 's|# Enroll Nvidia driver \& KMOD signing key for secure boot - Enter password "universalblue" if prompted|# Enroll Nvidia driver \& KMOD signing key for secure boot - Enter password "password" if prompted|' "${JUST_DEFAULT_FILE}"
-	sed -i '/^enroll-secure-boot-key:/,/^$/ {
-    s|ENROLLMENT_PASSWORD="universalblue"|ENROLLMENT_PASSWORD="password"|
-    s|SECUREBOOT_KEY=/etc/pki/akmods/certs/akmods-ublue.der|SECUREBOOT_KEY=/etc/secureboot/MOK.der|
-    s|"universalblue"|"password"|g
-  }' "${JUST_DEFAULT_FILE}"
-fi
