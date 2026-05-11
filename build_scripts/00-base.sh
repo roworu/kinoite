@@ -3,6 +3,10 @@
 set -ouex pipefail
 shopt -s nullglob
 
+### fix certs
+dnf5 -y install ca-certificates
+update-ca-trust
+
 ###
 ###  kernel install
 ###
