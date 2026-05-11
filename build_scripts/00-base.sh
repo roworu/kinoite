@@ -3,9 +3,6 @@
 set -ouex pipefail
 shopt -s nullglob
 
-### fix certs
-dnf5 -y install ca-certificates
-update-ca-trust
 
 ###
 ###  kernel install
@@ -74,7 +71,11 @@ install_nvidia_drivers() {
 	dnf5 versionlock add "${nvidia_driver_packages[@]}"
 
 	# add nvidia-container
+	# FIXME
+	# remove certs hadnling once https://github.com/NVIDIA/libnvidia-container/issues/367 is fixed
+
 	dnf5 config-manager addrepo --from-repofile=https://nvidia.github.io/libnvidia-container/stable/rpm/nvidia-container-toolkit.repo
+	dnf5 config-manager setopt nvidia-container-toolkit.sslcacert=/etc/pki/ca-trust/extracted/pem/tls-ca-bundle.pem # tmp
 	dnf5 config-manager setopt nvidia-container-toolkit.enabled=0
 	dnf5 config-manager setopt nvidia-container-toolkit.gpgcheck=1
 	dnf5 -y install --enablerepo=nvidia-container-toolkit nvidia-container-toolkit
