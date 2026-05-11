@@ -4,6 +4,17 @@ set -ouex pipefail
 shopt -s nullglob
 
 ###
+### base packages
+###
+
+base_packages=(
+	cmake
+	gcc
+	gcc-c++
+)
+dnf5 -y install "${base_packages[@]}"
+
+###
 ###  kernel install
 ###
 
