@@ -44,7 +44,7 @@ jobs:
   build_push:
     name: Build and push image
     strategy:
-      fail-fast: false
+      fail-fast: true
       matrix:
         flavor: ["", "nvidia"]
 
@@ -173,21 +173,6 @@ jobs:
             --build-arg-file build_args.txt \
             --tag raw-img .
 
-# FIXME:
-# vm starts, but tesing suite can not reach it. need to think on different approach
-#      - name: Run integration tests
-#        # bypass errors
-#        # continue-on-error: true
-#        run: |
-#          sudo podman save --format docker-archive raw-img -o /tmp/raw-img.tar
-#          sudo podman build -f tests/Containerfile -t kinoite-test-runner tests
-#          sudo podman run --rm --privileged \
-#            -v /tmp/raw-img.tar:/input/raw-img.tar:ro \
-#            -v /var/lib/containers/storage:/var/lib/containers/storage \
-#            -v /run/containers/storage:/run/containers/storage \
-#            kinoite-test-runner \
-#            "${{ matrix.flavor }}"
-
       - name: Run Rechunker
         id: rechunk
         uses: ublue-os/legacy-rechunk@a925083d9af7cb04b3e2a6e8c01bfa495f38b710 # v1.0.0
@@ -198,26 +183,6 @@ jobs:
           skip_compression: false
           version: '${{ steps.metadata.outputs.tags }}'
           labels: '${{ steps.metadata.outputs.labels }}'
-
-# FIXME:
-# usage of newer rechunker failing due to differences in build stage
-#      - name: Run Rechunker
-#        id: rechunk
-#        run: |
-#          container=$(sudo buildah from raw-img)
-#          mnt=$(sudo buildah mount $container)
-#          sudo bash -c "rm -rf $mnt/run/.* $mnt/run/* $mnt/tmp/.* $mnt/tmp/*"
-#          sudo buildah umount $container
-#          sudo buildah commit --identity-label=false --rm $container raw-img
-#
-#          sudo podman run --rm --privileged --volume /var/lib/containers:/var/lib/containers \
-#              localhost/raw-img \
-#              rpm-ostree compose build-chunked-oci \
-#              --bootc --max-layers 96 --format-version 2 \
-#              --from localhost/raw-img --output containers-storage:localhost/chunked-img
-#          sudo podman untag raw-img
-#
-#          echo "ref=containers-storage:localhost/chunked-img" >> "$GITHUB_OUTPUT"
 
       - name: Load in podman and tag
         run: |
