@@ -1,4 +1,4 @@
-ublue kinoite image + cachyos kernel
+# ublue kinoite image + cachyos kernel
 
 
 ### install
@@ -13,17 +13,14 @@ and then after reboot switch to signed version:
 rpm-ostree rebase ostree-image-signed:docker://ghcr.io/roworu/kinoite
 ```
 
+#### nvidia
 for nvidia version, use nvidia image name:
+
 ```bash
 rpm-ostree rebase ostree-unverified-registry:ghcr.io/roworu/kinoite-nvidia
+```
+
+reboot, and then:
+```bash
 rpm-ostree rebase ostree-image-signed:docker://ghcr.io/roworu/kinoite-nvidia
 ```
-
-
-### secureboot
-for secureboot to work, firstly import key:
-```bash
-mokutil --import /secureboot/MOK.der --password password
-```
-
-then, after reboot, import that key to your uefi. the password for key is `password`
