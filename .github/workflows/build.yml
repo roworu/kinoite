@@ -122,7 +122,7 @@ jobs:
         with:
           tags: |
             type=raw,value=${{ steps.build_seq.outputs.date_tag }}
-            type=raw,value=${{ steps.image.outputs.default_tag }}
+            type=raw,value=${{ env.DEFAULT_TAG }}
             type=raw,value=${{ env.FEDORA_VERSION }}
             type=raw,value=${{ steps.build_seq.outputs.version_tag }}
             type=sha,enable=${{ github.event_name == 'pull_request' }}
