@@ -125,6 +125,7 @@ jobs:
             type=raw,value=${{ env.DEFAULT_TAG }}
             type=raw,value=${{ env.FEDORA_VERSION }}
             type=raw,value=${{ steps.build_seq.outputs.version_tag }}
+            type=raw,value=${{ matrix.flavor }},enable=${{ matrix.flavor != '' }}
             type=sha,enable=${{ github.event_name == 'pull_request' }}
             type=ref,event=pr
           labels: |
