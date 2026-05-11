@@ -47,6 +47,7 @@ install_nvidia_drivers() {
 
 	nvidia_driver_packages=(
 		nvidia-driver-cuda
+		cuda-devel
 		libnvidia-fbc
 		libva-nvidia-driver
 		nvidia-driver
