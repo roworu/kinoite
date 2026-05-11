@@ -3,7 +3,6 @@
 set -ouex pipefail
 shopt -s nullglob
 
-
 ###
 ###  kernel install
 ###
