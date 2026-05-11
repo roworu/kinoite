@@ -68,6 +68,17 @@ jobs:
         run: |
           echo "date=$(date -u +%Y\-%m\-%d\T%H\:%M\:%S\Z)" >> $GITHUB_OUTPUT
 
+      - name: Compute image name
+        id: image
+        run: |
+          if [ -n "${{ matrix.flavor }}" ]; then
+            echo "name=${{ env.IMAGE_NAME }}-${{ matrix.flavor }}" >> "$GITHUB_OUTPUT"
+            echo "default_tag=${{ matrix.flavor }}" >> "$GITHUB_OUTPUT"
+          else
+            echo "name=${{ env.IMAGE_NAME }}" >> "$GITHUB_OUTPUT"
+            echo "default_tag=${{ env.DEFAULT_TAG }}" >> "$GITHUB_OUTPUT"
+          fi
+
       - name: Compute daily build sequence
         id: build_seq
         env:
@@ -111,7 +122,7 @@ jobs:
         with:
           tags: |
             type=raw,value=${{ steps.build_seq.outputs.date_tag }}
-            type=raw,value=${{ env.DEFAULT_TAG }}
+            type=raw,value=${{ steps.image.outputs.default_tag }}
             type=raw,value=${{ env.FEDORA_VERSION }}
             type=raw,value=${{ steps.build_seq.outputs.version_tag }}
             type=sha,enable=${{ github.event_name == 'pull_request' }}
@@ -119,10 +130,10 @@ jobs:
           labels: |
             org.opencontainers.image.created=${{ steps.date.outputs.date }}
             org.opencontainers.image.description=${{ env.IMAGE_DESC }}
-            org.opencontainers.image.documentation=https://raw.githubusercontent.com/${{ github.repository_owner }}/${{ env.IMAGE_NAME }}/${{ github.sha }}/README.md
-            org.opencontainers.image.source=https://github.com/${{ github.repository_owner }}/${{ env.IMAGE_NAME }}/blob/${{ github.sha }}/Containerfile
-            org.opencontainers.image.title=${{ env.IMAGE_NAME }}
-            org.opencontainers.image.url=https://github.com/${{ github.repository_owner }}/${{ env.IMAGE_NAME }}/tree/${{ github.sha }}
+            org.opencontainers.image.documentation=https://raw.githubusercontent.com/${{ github.repository_owner }}/${{ steps.image.outputs.name }}/${{ github.sha }}/README.md
+            org.opencontainers.image.source=https://github.com/${{ github.repository_owner }}/${{ steps.image.outputs.name }}/blob/${{ github.sha }}/Containerfile
+            org.opencontainers.image.title=${{ steps.image.outputs.name }}
+            org.opencontainers.image.url=https://github.com/${{ github.repository_owner }}/${{ steps.image.outputs.name }}/tree/${{ github.sha }}
             org.opencontainers.image.vendor=${{ github.repository_owner }}
             org.opencontainers.image.version=${{ steps.build_seq.outputs.version_tag }}
             containers.bootc=1
@@ -150,13 +161,14 @@ jobs:
         run: |
           cat <<'EOF' >>build_args.txt
           FEDORA_VERSION=${{ env.FEDORA_VERSION }}
+          FLAVOR=${{ matrix.flavor }}
           EOF
 
       - name: Build Image
         id: build_image
         run: |
           sudo -E buildah build \
-            --target ${{ env.IMAGE_NAME }} \
+            --target ${{ steps.image.outputs.name }} \
             --file Containerfile \
             --build-arg-file build_args.txt \
             --tag raw-img .
@@ -182,7 +194,7 @@ jobs:
         with:
           rechunk: 'ghcr.io/ublue-os/legacy-rechunk:v1.0.0-x86_64'
           ref: 'raw-img'
-          prev-ref: '${{ env.IMAGE_REGISTRY }}/${{ env.IMAGE_NAME }}:${{ env.DEFAULT_TAG }}'
+          prev-ref: '${{ env.IMAGE_REGISTRY }}/${{ steps.image.outputs.name }}:${{ steps.image.outputs.default_tag }}'
           skip_compression: false
           version: '${{ steps.metadata.outputs.tags }}'
           labels: '${{ steps.metadata.outputs.labels }}'
@@ -212,7 +224,7 @@ jobs:
           IMAGE=$(podman pull ${{ steps.rechunk.outputs.ref }})
           sudo rm -rf ${{ steps.rechunk.outputs.output }}
           for tag in ${{ steps.metadata.outputs.tags }}; do
-            podman tag $IMAGE "${{ env.IMAGE_REGISTRY }}/${{ env.IMAGE_NAME }}:$tag"
+            podman tag $IMAGE "${{ env.IMAGE_REGISTRY }}/${{ steps.image.outputs.name }}:$tag"
           done
 
       - name: Login to GitHub Container Registry
@@ -231,13 +243,13 @@ jobs:
           retries=5
           delay=10
 
-          # Loop through each tag
+          # iterate over each flavour and push
           for tag in ${{ steps.metadata.outputs.tags }}; do
             echo "Pushing tag: $tag"
 
             for attempt in $(seq 1 $retries); do
               echo "  Attempt $attempt/$retries for $tag..."
-              if podman push "${{ env.IMAGE_REGISTRY }}/${{ env.IMAGE_NAME }}:$tag" --tls-verify=true; then
+              if podman push "${{ env.IMAGE_REGISTRY }}/${{ steps.image.outputs.name }}:$tag" --tls-verify=true; then
                 echo "  Push of $tag succeeded"
                 break
               fi
@@ -261,7 +273,7 @@ jobs:
       - name: Sign container image
         if: github.event_name != 'pull_request' && github.ref == format('refs/heads/{0}', github.event.repository.default_branch)
         run: |
-          IMAGE_FULL="${{ env.IMAGE_REGISTRY }}/${{ env.IMAGE_NAME }}"
+          IMAGE_FULL="${{ env.IMAGE_REGISTRY }}/${{ steps.image.outputs.name }}"
           for tag in ${{ steps.metadata.outputs.tags }}; do
             cosign sign -y --key env://COSIGN_PRIVATE_KEY $IMAGE_FULL:$tag
           done
