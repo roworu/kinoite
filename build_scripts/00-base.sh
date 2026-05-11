@@ -20,7 +20,6 @@ dnf5 -y install "${base_packages[@]}"
 
 FEDORA_VERSION="$(rpm -E %fedora)"
 dnf5 -y copr enable bieszczaders/kernel-cachyos-lto "fedora-${FEDORA_VERSION}-x86_64"
-dnf5 -y copr enable bieszczaders/kernel-cachyos-addons "fedora-${FEDORA_VERSION}-x86_64"
 
 dnf5 -y config-manager setopt '*fedora*.exclude=kernel-core-* kernel-modules-* kernel-uki-virt-*'
 dnf5 -y config-manager setopt '*updates*.exclude=kernel-core-* kernel-modules-* kernel-uki-virt-*'
@@ -39,17 +38,22 @@ done
 find /usr/lib/modules -mindepth 1 -maxdepth 1 -exec rm -rf -- {} +
 find /boot -mindepth 1 -maxdepth 1 -exec rm -rf -- {} +
 
-packages=(
+kernel_packages=(
 	kernel-cachyos-lto
 	kernel-cachyos-lto-core
 	kernel-cachyos-lto-devel-matched
 	kernel-cachyos-lto-modules
-	scx-scheds
-    scx-manager
+	
 )
 
-dnf5 -y install "${packages[@]}"
-dnf5 versionlock add "${packages[@]}"
+dnf5 -y install "${kernel_packages[@]}"
+dnf5 versionlock add "${kernel_packages[@]}"
+
+
+dnf5 -y copr enable bieszczaders/kernel-cachyos-addons "fedora-${FEDORA_VERSION}-x86_64"
+dnf5 config-manager setopt kernel-cachyos-addons.enabled=0
+dnf5 -y install --enablerepo=kernel-cachyos-addons ananicy-cpp
+systemctl enable ananicy-cpp.service
 
 ###
 ### nvidia drivers install
