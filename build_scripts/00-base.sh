@@ -9,8 +9,10 @@ shopt -s nullglob
 
 base_packages=(
 	cmake
+	ccache
 	gcc
 	gcc-c++
+	openblas
 )
 dnf5 -y install "${base_packages[@]}"
 
