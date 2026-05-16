@@ -60,7 +60,7 @@ jobs:
           SECUREBOOT_KEY: ${{ secrets.SECUREBOOT_KEY }}
 
       - name: Set up Docker Buildx
-        uses: docker/setup-buildx-action@v3
+        uses: docker/setup-buildx-action@v4
 
       - name: Build Image
         uses: docker/build-push-action@v6
