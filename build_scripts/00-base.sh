@@ -62,6 +62,10 @@ install_nvidia_drivers() {
 	mkdir -p /var/tmp
 	chmod 1777 /var/tmp
 
+    # block usage of fedora nvidia-related modules
+    dnf5 config-manager setopt \
+        fedora-multimedia.excludepkgs='*nvidia* *cuda* libva-nvidia-driver'
+
 	KERNEL_VERSION=$(find /usr/lib/modules -mindepth 1 -maxdepth 1 -type d -printf '%f\n' -quit)
 
 	dnf5 config-manager addrepo --from-repofile=https://negativo17.org/repos/fedora-nvidia.repo
