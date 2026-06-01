@@ -175,9 +175,9 @@ jobs:
 
       - name: Run Rechunker
         id: rechunk
-        uses: ublue-os/legacy-rechunk@v1.0.1
+        uses: ublue-os/legacy-rechunk@v1.0.0
         with:
-          rechunk: 'ghcr.io/ublue-os/legacy-rechunk:v1.0.1-x86_64'
+          rechunk: 'ghcr.io/ublue-os/legacy-rechunk:v1.0.0-x86_64'
           ref: 'raw-img'
           prev-ref: '${{ env.IMAGE_REGISTRY }}/${{ steps.image.outputs.name }}:${{ steps.image.outputs.default_tag }}'
           skip_compression: false
