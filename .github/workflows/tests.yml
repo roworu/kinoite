@@ -62,7 +62,7 @@ jobs:
 
       - name: Cleanup
         run: |
-          just clean && just sudo-clean && podman system prune --all --force
+          just clean && podman system prune --all --force
 
       - name: Build image
         run: |
