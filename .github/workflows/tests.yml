@@ -69,11 +69,7 @@ jobs:
         run: |
           sudo just build
 
-      - name: Build VM image
-        run: |
-          sudo just build-qcow2
-
-      - name: Run VM image
+      - name: Build and run VM image
         run: |
           nohup sudo env VM_GPU="FALSE" just run-vm-qcow2 > vm.log 2>&1 &
 
