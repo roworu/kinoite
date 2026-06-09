@@ -1,4 +1,4 @@
-from conftest import TEST_USER
+from defaults import TEST_USER
 
 def test_ssh_login(ssh_command):
     ssh_command("true")
