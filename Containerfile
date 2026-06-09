@@ -13,7 +13,7 @@ ARG TESTING_ENVIRONMENT="FALSE"
 
 RUN if [ "${TESTING_ENVIRONMENT}" = "TRUE" ]; then \
     echo "That is testing image!" && \
-    systemctl enable --now sshd.service && \
+    systemctl enable sshd.service && \
     echo "test_user ALL=(ALL) NOPASSWD:ALL" > /etc/sudoers.d/test_user && \
     chmod 0440 /etc/sudoers.d/test_user; \
     fi
