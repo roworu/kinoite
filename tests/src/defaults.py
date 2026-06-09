@@ -5,10 +5,5 @@ PLASMA_DE_PACKAGES = [
     "xdg-user-dirs",
 ]
 
-GNOME_DE_PACKAGES = [
-    "gnome-shell",
-    "gdm",
-    "xdg-user-dirs",
-]
-
 KERNEL_VERSION = "cachy"
+TEST_USER = "test_user"
