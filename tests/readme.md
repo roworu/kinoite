@@ -17,18 +17,24 @@ Fedora already provides strong guarantees in those areas. However, those checks 
 These tests add runtime validation for the produced image itself, helping catch regressions that only appear after boot.
 
 Current coverage includes:
-1. System successfully boots and reaches graphical session
+1. SSH connectivity and correct user context
 
-2. Basic CLI operations execute successfully
-   - create, move, and delete files/directories
+2. CachyOS kernel is installed and present in the boot cmdline
 
-3. Expected image components are present
-   - CachyOS kernel
-   - Plasma session
+3. Plasma desktop session
+   - graphical.target is the default systemd target
+   - display-manager.service is active
+   - plasmalogin.service is active and selected as the display manager
+   - Wayland session is running
+   - Required plasma packages are installed
 
-4. Flatpak functionality works correctly
-   - add/remove remotes
-   - install applications
-   - launch installed applications
+4. Flatpak functionality
+   - flatpak command is available
+   - remote add/remove works
+   - application install/uninstall works
+
+5. Basic CLI file operations (create, touch, test, rm, rmdir)
+
+6. IPv4 network connectivity (outbound ping)
 
 The long-term goal is to expand coverage for critical user workflows and common failure scenarios.
