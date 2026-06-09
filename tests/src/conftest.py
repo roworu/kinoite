@@ -36,8 +36,10 @@ def wait_for_ssh():
             capture_output=True,
         )
 
-        if result.returncode == 0: return
-        else: time.sleep(5)
+        if result.returncode == 0:
+            return
+        else:
+            time.sleep(5)
 
     raise TimeoutError("SSH host did not become available")
 
