@@ -16,6 +16,7 @@ env:
   IMAGE_NAME: "${{ github.event.repository.name }}"
   FEDORA_VERSION: "44"
   DEFAULT_TAG: "latest"
+  TESTING_ENVIRONMENT: "TRUE"
 
 concurrency:
   group: ${{ github.workflow }}-${{ github.event_name }}-${{ github.event.pull_request.number || github.ref }}
@@ -49,10 +50,10 @@ jobs:
         run: |
           sudo apt update && sudo apt install -y podman systemd-container
 
-          just_version="1.50.0"
+          just_version="1.52.0"
           just_archive="just-${just_version}-x86_64-unknown-linux-musl.tar.gz"
           just_url="https://github.com/casey/just/releases/download/${just_version}/${just_archive}"
-          just_sha256="27e011cd6328fadd632e59233d2cf5f18460b8a8c4269acd324c1a8669f34db0"
+          just_sha256="41af45372c49c404ca7b9a318ae9de5564636e39c6520cc4d42bf678f3bfb1bc"
 
           curl --fail --location --show-error --silent --output "${just_archive}" "${just_url}"
           echo "${just_sha256}  ${just_archive}" | sha256sum --check
@@ -66,7 +67,7 @@ jobs:
 
       - name: Build image
         run: |
-          sudo env TESTING_ENVIRONMENT="TRUE" just build
+          sudo just build
 
       - name: Build VM image
         run: |

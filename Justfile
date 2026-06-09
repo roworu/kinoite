@@ -3,6 +3,7 @@
 export image_name := env("IMAGE_NAME", "kinoite")
 export default_tag := env("DEFAULT_TAG", "latest")
 export bib_image := env("BIB_IMAGE", "quay.io/centos-bootc/bootc-image-builder:latest")
+export fedora_version := env("FEDORA_VERSION", "44")
 export testing_env := env("TESTING_ENVIRONMENT", "FALSE")
 export vm_gpu := env("VM_GPU", "TRUE")
 
@@ -110,6 +111,7 @@ build $target_image=image_name $tag=default_tag:
     podman build \
         "${BUILD_ARGS[@]}" \
         --pull=newer \
+        --build-arg FEDORA_VERSION="${fedora_version}" \
         --build-arg TESTING_ENVIRONMENT="${testing_env}" \
         --target "${target_image}" \
         --tag "${target_image}:${tag}" \
