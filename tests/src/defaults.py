@@ -3,6 +3,9 @@ PLASMA_DE_PACKAGES = [
     "plasma-workspace",
     "plasma-login-manager",
     "xdg-user-dirs",
+    "dolphin",
+    "konsole",
+    "kde-settings"
 ]
 
 KERNEL_VERSION = "cachy"

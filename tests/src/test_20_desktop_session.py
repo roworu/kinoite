@@ -33,6 +33,33 @@ def test_plasma_de_packages_installed(ssh_command):
         ssh_command(f"rpm -q {package}")
 
 
+def test_firewall_running(ssh_command):
+    result = ssh_command("systemctl is-active firewalld")
+    actual_state = result.stdout.strip()
+    assert actual_state == "active", \
+        f"firewalld expected to be active, actual state: {actual_state}. Full response: {result.stdout}"
+
+
+def test_networkmanager_running(ssh_command):
+    result = ssh_command("systemctl is-active NetworkManager")
+    actual_state = result.stdout.strip()
+    assert actual_state == "active", \
+        f"NetworkManager expected to be active, actual state: {actual_state}. Full response: {result.stdout}"
+
+
+def test_pipewire_running(ssh_command):
+    result = ssh_command("systemctl --user is-active pipewire")
+    actual_state = result.stdout.strip()
+    assert actual_state == "active", \
+        f"pipewire expected to be active, actual state: {actual_state}. Full response: {result.stdout}"
+
+
+def test_polkit_running(ssh_command):
+    result = ssh_command("systemctl is-active polkit")
+    actual_state = result.stdout.strip()
+    assert actual_state == "active", \
+        f"polkit expected to be active, actual state: {actual_state}. Full response: {result.stdout}"
+
 
 def test_graphical_session_exists(ssh_command):
     result = ssh_command(
