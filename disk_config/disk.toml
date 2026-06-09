@@ -1,9 +1,10 @@
+# that os should not be installed from a standalone iso
+# following disk image is only for testing usage and contains settings not intended for final os image 
+
 [[customizations.filesystem]]
 mountpoint = "/"
 minsize = "20 GiB"
 
-
-# integrational tests set
 [[customizations.files]]
 path = "/etc/ssh/sshd_config.d/99-test.conf"
 data = """
