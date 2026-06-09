@@ -5,9 +5,11 @@ import subprocess
 
 from pathlib import Path
 
+from defaults import TEST_USER as DEFAULT_TEST_USER
+
 TEST_HOST = os.getenv("TEST_SSH_HOST", "127.0.0.1")
 TEST_PORT = os.getenv("TEST_SSH_PORT", "2222")
-TEST_USER = os.getenv("TEST_SSH_USER", "test_user")
+TEST_USER = os.getenv("TEST_SSH_USER", DEFAULT_TEST_USER)
 TEST_KEY = Path(os.getenv("TEST_SSH_KEY", "/ssh/test_user"))
 
 assert TEST_KEY.is_file(), f"SSH key not found: {TEST_KEY}"
@@ -16,7 +18,7 @@ assert TEST_KEY.is_file(), f"SSH key not found: {TEST_KEY}"
 @pytest.fixture(scope="session")
 def wait_for_ssh():
 
-    deadline = time.time() + 600
+    deadline = time.time() + int(os.getenv("TEST_SSH_WAIT_SECONDS", "600"))
 
     while time.time() < deadline:
 
