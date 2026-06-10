@@ -5,10 +5,14 @@ on:
   push:
     paths:
       - ".github/workflows/tests.yml"
+      - "Justfile"
+      - "**/*.sh"
       - "tests/**"
   pull_request:
     paths:
       - ".github/workflows/tests.yml"
+      - "Justfile"
+      - "**/*.sh"
       - "tests/**"
   workflow_dispatch:
 
@@ -23,6 +27,32 @@ concurrency:
   cancel-in-progress: true
 
 jobs:
+
+  check_formatting:
+    name: check formatting and lint
+    runs-on: ubuntu-24.04
+    timeout-minutes: 10
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@df4cb1c069e1874edd31b4311f1884172cec0e10 # v6
+
+      - name: Check shell script formatting
+        run: |
+          find . -iname "*.sh" -type f -exec shfmt --check "{}" +
+
+      - name: Lint shell scripts
+        run: |
+          find . -iname "*.sh" -type f -exec shellcheck "{}" ';'
+
+      - name: Install ruff
+        uses: astral-sh/setup-ruff@b41a6e32f3e3f21e524d126cb768a34418494da1 # v3
+        with:
+          version: "latest"
+
+      - name: Check Python formatting and lint
+        run: ruff check tests/src/ && ruff format --check tests/src/
+
   run_tests:
     name: Run tests on final OS image
 #    if: >-
