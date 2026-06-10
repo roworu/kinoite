@@ -5,27 +5,21 @@ on:
   pull_request:
     branches:
       - main
-    paths-ignore:
-      - "**.md"
-      - "**.txt"
-      - "tests/**"
-      - ".gitignore"
-      - ".github/act/**"
-      - ".github/workflows/tests.yml"
-      - ".github/workflows/cleanup.yml"
+    paths:
+      - ".github/workflows/build.yml"
+      - "build_scripts/**"
+      - "Containerfile"
+      
   schedule:
     - cron: '05 10 * * *'
+
   push:
     branches:
       - main
-    paths-ignore:
-      - "**.md"
-      - "**.txt"
-      - "tests/**"
-      - ".gitignore"
-      - ".github/act/**"
-      - ".github/workflows/tests.yml"
-      - ".github/workflows/cleanup.yml"
+    paths:
+      - ".github/workflows/build.yml"
+      - "build_scripts/**"
+      - "Containerfile"
 
   workflow_dispatch:
 
