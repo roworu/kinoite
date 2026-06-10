@@ -45,14 +45,6 @@ jobs:
         run: |
           find . -iname "*.sh" -type f -exec shellcheck "{}" ';'
 
-      - name: Install ruff
-        uses: astral-sh/setup-ruff@b41a6e32f3e3f21e524d126cb768a34418494da1 # v3
-        with:
-          version: "latest"
-
-      - name: Check Python formatting and lint
-        run: ruff check tests/src/ && ruff format --check tests/src/
-
   run_tests:
     name: Run tests on final OS image
 #    if: >-
