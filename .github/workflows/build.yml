@@ -50,7 +50,7 @@ jobs:
       packages: write
       id-token: write
 
-    timeout-minutes: 60
+    timeout-minutes: 90
 
     steps:
 
