@@ -1,3 +1,4 @@
+### determine current fedora version:
 ARG FEDORA_VERSION=44
 
 FROM scratch AS ctx
