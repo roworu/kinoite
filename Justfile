@@ -15,31 +15,6 @@ alias run-vm := run-vm-qcow2
 default:
     @just --list
 
-###
-### Syntax
-###
-
-# Check Just syntax across all .just files and Justfile
-[group('Just')]
-check:
-    #!/usr/bin/bash
-    find . -type f -name "*.just" | while read -r file; do
-        echo "Checking syntax: $file"
-        just --unstable --fmt --check -f "$file"
-    done
-    echo "Checking syntax: Justfile"
-    just --unstable --fmt --check -f Justfile
-
-# Fix Just syntax across all .just files and Justfile
-[group('Just')]
-fix:
-    #!/usr/bin/bash
-    find . -type f -name "*.just" | while read -r file; do
-        echo "Fixing syntax: $file"
-        just --unstable --fmt -f "$file"
-    done
-    echo "Fixing syntax: Justfile"
-    just --unstable --fmt -f Justfile || { exit 1; }
 
 ###
 ### Utility
@@ -70,17 +45,6 @@ sudoif command *args:
         fi
     }
     sudoif {{ command }} {{ args }}
-
-# Lint shell scripts with shellcheck
-[group('Utility')]
-lint:
-    #!/usr/bin/env bash
-    set -eoux pipefail
-    if ! command -v shellcheck &> /dev/null; then
-        echo "shellcheck could not be found. Please install it."
-        exit 1
-    fi
-    /usr/bin/find . -iname "*.sh" -type f -exec shellcheck "{}" ';'
 
 # Format shell scripts with shfmt
 [group('Utility')]
