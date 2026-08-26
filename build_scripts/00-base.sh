@@ -7,8 +7,7 @@ shopt -s nullglob
 ###  kernel install
 ###
 
-FEDORA_VERSION="$(rpm -E %fedora)"
-dnf5 -y copr enable bieszczaders/kernel-cachyos-lto "fedora-${FEDORA_VERSION}-x86_64"
+dnf5 -y copr enable bieszczaders/kernel-cachyos-lto
 
 dnf5 -y config-manager setopt '*fedora*.exclude=kernel-core-* kernel-modules-* kernel-uki-virt-*'
 dnf5 -y config-manager setopt '*updates*.exclude=kernel-core-* kernel-modules-* kernel-uki-virt-*'
@@ -39,7 +38,7 @@ dnf5 -y install "${kernel_packages[@]}"
 dnf5 versionlock add "${kernel_packages[@]}"
 
 
-dnf5 -y copr enable bieszczaders/kernel-cachyos-addons "fedora-${FEDORA_VERSION}-x86_64"
+dnf5 -y copr enable bieszczaders/kernel-cachyos-addons
 dnf5 -y install ananicy-cpp
 systemctl enable ananicy-cpp.service
 
@@ -78,7 +77,7 @@ install_nvidia_drivers() {
 	dnf5 -y install --enablerepo=fedora-nvidia "${nvidia_driver_packages[@]}"
 	dnf5 versionlock add "${nvidia_driver_packages[@]}"
 
-	# add nvidia-container
+	# add nvidia-container tools
 	dnf5 config-manager addrepo --from-repofile=https://nvidia.github.io/libnvidia-container/stable/rpm/nvidia-container-toolkit.repo
 	dnf5 config-manager setopt nvidia-container-toolkit.enabled=0
 	dnf5 config-manager setopt nvidia-container-toolkit.gpgcheck=1
