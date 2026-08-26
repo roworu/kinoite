@@ -67,13 +67,7 @@ build $target_image=image_name $tag=default_tag:
     #!/usr/bin/env bash
     set -euo pipefail
 
-    BUILD_ARGS=()
-    if [[ -z "$(git status -s)" ]]; then
-        BUILD_ARGS+=("--build-arg" "SHA_HEAD_SHORT=$(git rev-parse --short HEAD)")
-    fi
-
     podman build \
-        "${BUILD_ARGS[@]}" \
         --pull=newer \
         --build-arg FEDORA_VERSION="${fedora_version}" \
         --build-arg TESTING_ENVIRONMENT="${testing_env}" \
