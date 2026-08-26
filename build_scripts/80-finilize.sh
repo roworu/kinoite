@@ -101,6 +101,7 @@ cleanup() {
 	rm -fv /etc/yum.repos.d/fedora-nvidia.repo
 	rm -fv /etc/yum.repos.d/nvidia-container-toolkit.repo
 	rm -rfv /tmp/*
+	rm -rfv /run/*
 	rm -rfv /var/tmp/*
 	rm -rfv /var/log/dnf5.log
 
