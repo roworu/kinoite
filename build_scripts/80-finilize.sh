@@ -3,57 +3,9 @@
 set -ouex pipefail
 
 KERNEL_VERSION=$(find /usr/lib/modules -mindepth 1 -maxdepth 1 -type d -printf '%f\n' -quit)
-KERNEL_IMAGE="/usr/lib/modules/$KERNEL_VERSION/vmlinuz"
 
 mkdir -p /var/tmp
 chmod 1777 /var/tmp
-
-sign_kernel_and_modules() {
-
-	SIGN_DIR="/secureboot"
-
-	# install required tools
-	dnf5 -y install sbsigntools
-
-	# sign kernel image
-	sbsign \
-		--key "$SIGN_DIR/MOK.key" \
-		--cert "$SIGN_DIR/MOK.pem" \
-		--output "${KERNEL_IMAGE}.signed" \
-		"$KERNEL_IMAGE"
-
-	mv "${KERNEL_IMAGE}.signed" "$KERNEL_IMAGE"
-
-	# sign all kernel modules
-	find "/lib/modules/$KERNEL_VERSION" -type f -name '*.ko.xz' -print0 | while IFS= read -r -d '' comp; do
-		uncompressed="${comp%.xz}"
-
-		# 1) decompress module
-		if xz -d --keep "$comp"; then
-			echo "Decompressed $comp → $uncompressed"
-		else
-			echo "Warning: failed to decompress $comp, skipping"
-			continue
-		fi
-
-		# 2) sign module (don't fail whole script if one module fails)
-		/usr/src/kernels/"$KERNEL_VERSION"/scripts/sign-file \
-			sha512 "$SIGN_DIR/MOK.key" "$SIGN_DIR/MOK.pem" "$uncompressed" || true
-
-		# 3) cleanup compressed original
-		rm -fv "$comp"
-
-		# 4) recompress
-		if xz -z "$uncompressed"; then
-			echo "Recompressed and signed $uncompressed"
-		else
-			echo "Warning: failed to recompress $uncompressed"
-		fi
-	done
-
-	# remove private key after signing
-	rm -fv "$SIGN_DIR/MOK.key"
-}
 
 build_initramfs() {
 	echo "Building initramfs for kernel version: $KERNEL_VERSION"
@@ -84,7 +36,6 @@ cleanup() {
 
 	cleanup_packages=(
 		kernel-cachyos-lto-devel-matched
-		sbsigntools
 	)
 
 	if [ "${INSTALL_NVIDIA:-}" = "TRUE" ]; then
@@ -100,10 +51,7 @@ cleanup() {
 	rm -rfv /etc/yum.repos.d/*cachyos*
 	rm -fv /etc/yum.repos.d/fedora-nvidia.repo
 	rm -fv /etc/yum.repos.d/nvidia-container-toolkit.repo
-	rm -rfv /tmp/*
-	# rm -rfv /run/*
-	rm -rfv /var/tmp/*
-	rm -rfv /var/log/dnf5.log
+	rm -rfv /run/*
 
 	# from 00-base.sh kernel installation
 	rm -fv /usr/lib/kernel/install.d/05-rpmostree.install
@@ -112,5 +60,4 @@ cleanup() {
 }
 
 build_initramfs
-sign_kernel_and_modules
 cleanup

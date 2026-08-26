@@ -8,7 +8,6 @@ COPY build_scripts /
 ### base plasma image
 ###
 FROM ghcr.io/ublue-os/kinoite-main:${FEDORA_VERSION} AS kinoite
-COPY system_files/base /
 
 ARG TESTING_ENVIRONMENT="FALSE"
 
@@ -37,7 +36,6 @@ RUN bootc container lint
 ### plasma-nvidia image
 ###
 FROM ghcr.io/ublue-os/kinoite-main:${FEDORA_VERSION} AS kinoite-nvidia
-COPY system_files/base /
 COPY system_files/nvidia /
 
 ENV INSTALL_NVIDIA="TRUE"

@@ -64,13 +64,6 @@ jobs:
       - name: Checkout
         uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v6
 
-      - name: Decode Secure Boot keys
-        run: |
-          echo "$SECUREBOOT_KEY" > system_files/base/secureboot/MOK.key
-          chmod 600 system_files/base/secureboot/MOK.key
-        env:
-          SECUREBOOT_KEY: ${{ secrets.SECUREBOOT_KEY }}
-
       # we need newer `act` version
       - name: Prepare dependencies
         run: |
