@@ -51,7 +51,7 @@ cleanup() {
 	rm -rfv /etc/yum.repos.d/*cachyos*
 	rm -fv /etc/yum.repos.d/fedora-nvidia.repo
 	rm -fv /etc/yum.repos.d/nvidia-container-toolkit.repo
-	rm -rfv /run/*
+	rm -rfv /run/dnf
 
 	# from 00-base.sh kernel installation
 	rm -fv /usr/lib/kernel/install.d/05-rpmostree.install
