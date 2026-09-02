@@ -3,6 +3,10 @@
 set -ouex pipefail
 shopt -s nullglob
 
+# temp workaround permission issues
+mkdir -p /var/tmp /tmp
+chmod 1777 /var/tmp /tmp
+
 ###
 ### kernel install
 ###
