@@ -71,6 +71,7 @@ build $target_image=image_name $tag=default_tag:
         --pull=newer \
         --build-arg FEDORA_VERSION="${fedora_version}" \
         --build-arg TESTING_ENVIRONMENT="${testing_env}" \
+        --label "org.opencontainers.image.version=${fedora_version}.$(date -u +%Y%m%d).0" \
         --target "${target_image}" \
         --tag "${target_image}:${tag}" \
         .

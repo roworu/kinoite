@@ -1,9 +1,9 @@
 import os
-import time
-import pytest
 import subprocess
-
+import time
 from pathlib import Path
+
+import pytest
 
 from defaults import TEST_USER as DEFAULT_TEST_USER
 
@@ -21,19 +21,24 @@ def wait_for_ssh():
     deadline = time.time() + int(os.getenv("TEST_SSH_WAIT_SECONDS", "600"))
 
     while time.time() < deadline:
-
         result = subprocess.run(
             [
                 "ssh",
-                "-i", str(TEST_KEY),
-                "-o", "BatchMode=yes",
-                "-o", "StrictHostKeyChecking=no",
-                "-o", "ConnectTimeout=5",
-                "-p", TEST_PORT,
+                "-i",
+                str(TEST_KEY),
+                "-o",
+                "BatchMode=yes",
+                "-o",
+                "StrictHostKeyChecking=no",
+                "-o",
+                "ConnectTimeout=5",
+                "-p",
+                TEST_PORT,
                 f"{TEST_USER}@{TEST_HOST}",
                 "true",
             ],
             capture_output=True,
+            check=False,
         )
 
         if result.returncode == 0:
@@ -52,13 +57,20 @@ def ssh_command(wait_for_ssh):
         result = subprocess.run(
             [
                 "ssh",
-                "-i", str(TEST_KEY),
-                "-o", "BatchMode=yes",
-                "-o", "StrictHostKeyChecking=no",
-                "-p", TEST_PORT,
+                "-i",
+                str(TEST_KEY),
+                "-o",
+                "BatchMode=yes",
+                "-o",
+                "StrictHostKeyChecking=no",
+                "-p",
+                TEST_PORT,
                 f"{TEST_USER}@{TEST_HOST}",
                 command,
-            ], capture_output=True, text=True,
+            ],
+            capture_output=True,
+            text=True,
+            check=False,
         )
 
         if check and result.returncode != 0:
