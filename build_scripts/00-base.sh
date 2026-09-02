@@ -18,9 +18,7 @@ printf '%s\n' '#!/bin/sh' 'exit 0' >50-dracut.install
 chmod +x 05-rpmostree.install 50-dracut.install
 popd
 
-# drop any prebuilt out-of-tree kmod tied to the kernel we're about to remove
-# (the upstream kinoite-nvidia base ships kmod-nvidia matched to its own kernel)
-mapfile -t stale_nvidia_kmods < <(rpm -qa 'kmod-nvidia-*')
+mapfile -t stale_nvidia_kmods < <(rpm -qa --queryformat '%{NAME}\n' | grep -E '^kmod-nvidia(-|$)')
 if [ "${#stale_nvidia_kmods[@]}" -gt 0 ]; then
 	dnf5 -y remove "${stale_nvidia_kmods[@]}"
 fi
@@ -52,7 +50,6 @@ systemctl enable ananicy-cpp.service
 ### nvidia kernel module rebuild (kinoite-nvidia flavor only)
 ###
 
-# another repo test 
 KERNEL_VERSION=$(find /usr/lib/modules -mindepth 1 -maxdepth 1 -type d -printf '%f\n' -quit)
 
 if rpm -q nvidia-driver-libs &>/dev/null; then
@@ -62,6 +59,14 @@ if rpm -q nvidia-driver-libs &>/dev/null; then
 	dnf5 -y install akmods
 	dnf5 -y install --setopt=tsflags=noscripts akmod-nvidia
 	akmods --force --kernels "${KERNEL_VERSION}" --kmod nvidia
+
+	# akmods reports build failures as a "[FAILED]" log line but still exits 0,
+	# so a broken compile would otherwise ship silently with no nvidia module at all
+	if ! find "/usr/lib/modules/${KERNEL_VERSION}" -iname 'nvidia.ko*' -print -quit | grep -q .; then
+		echo "ERROR: nvidia kmod build failed for kernel ${KERNEL_VERSION}" >&2
+		find /var/cache/akmods -iname '*.log' -exec sh -c 'echo "=== $1 ==="; cat "$1"' _ {} \; >&2
+		exit 1
+	fi
 fi
 
 ###
