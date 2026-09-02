@@ -24,4 +24,4 @@ name = "test_user"
 password = "test"
 shell = "/usr/bin/bash"
 key = "ssh-ed25519 AAAAC3NzaC1lZDI1NTE5AAAAIKeSG5gIy8/M1tjJ0b1kXlNiLrD/Me+qGUdlnouRvOO3"
-groups = ["users", "wheel"]
+groups = ["wheel"]
