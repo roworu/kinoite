@@ -52,16 +52,15 @@ systemctl enable ananicy-cpp.service
 ### nvidia kernel module rebuild (kinoite-nvidia flavor only)
 ###
 
-# The kinoite-nvidia base image ships nvidia userspace + a kmod-nvidia
-# prebuilt for its own kernel. That kmod is gone now (removed with the
-# kernel above), so rebuild it from source against the CachyOS kernel using
-# the negativo17-fedora-nvidia repo the base image already has configured.
-
+# another repo test 
 KERNEL_VERSION=$(find /usr/lib/modules -mindepth 1 -maxdepth 1 -type d -printf '%f\n' -quit)
 
 if rpm -q nvidia-driver-libs &>/dev/null; then
+	sed -i '0,/enabled=0/{s/enabled=0/enabled=1/}' /etc/yum.repos.d/negativo17-fedora-nvidia.repo
+	sed -i '0,/enabled=0/{s/enabled=0/enabled=1/}' /etc/yum.repos.d/nvidia-container-toolkit.repo
+
 	dnf5 -y install akmods
-	dnf5 -y install --setopt=tsflags=noscripts --enablerepo=fedora-nvidia akmod-nvidia
+	dnf5 -y install --setopt=tsflags=noscripts akmod-nvidia
 	akmods --force --kernels "${KERNEL_VERSION}" --kmod nvidia
 fi
 
