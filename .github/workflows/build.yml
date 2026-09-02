@@ -31,7 +31,7 @@ env:
   DEFAULT_TAG: "latest"
 
 concurrency:
-  group: ${{ github.workflow }}-${{ github.ref || github.run_id }}-${{ inputs.brand_name}}-${{ inputs.stream_name }}
+  group: ${{ github.workflow }}-${{ github.ref || github.run_id }}
   cancel-in-progress: true
 
 jobs:
@@ -125,10 +125,10 @@ jobs:
           labels: |
             org.opencontainers.image.created=${{ steps.date.outputs.date }}
             org.opencontainers.image.description=${{ env.IMAGE_DESC }}
-            org.opencontainers.image.documentation=https://raw.githubusercontent.com/${{ github.repository_owner }}/${{ steps.image.outputs.name }}/${{ github.sha }}/README.md
-            org.opencontainers.image.source=https://github.com/${{ github.repository_owner }}/${{ steps.image.outputs.name }}/blob/${{ github.sha }}/Containerfile
+            org.opencontainers.image.documentation=https://raw.githubusercontent.com/${{ github.repository }}/${{ github.sha }}/readme.md
+            org.opencontainers.image.source=https://github.com/${{ github.repository }}/blob/${{ github.sha }}/Containerfile
             org.opencontainers.image.title=${{ steps.image.outputs.name }}
-            org.opencontainers.image.url=https://github.com/${{ github.repository_owner }}/${{ steps.image.outputs.name }}/tree/${{ github.sha }}
+            org.opencontainers.image.url=https://github.com/${{ github.repository }}/tree/${{ github.sha }}
             org.opencontainers.image.vendor=${{ github.repository_owner }}
             org.opencontainers.image.version=${{ steps.build_seq.outputs.version_tag }}
             containers.bootc=1
@@ -220,6 +220,5 @@ jobs:
             cosign sign -y --key env://COSIGN_PRIVATE_KEY $IMAGE_FULL:$tag
           done
         env:
-          TAGS: ${{ steps.push.outputs.digest }}
           COSIGN_EXPERIMENTAL: false
           COSIGN_PRIVATE_KEY: ${{ secrets.SIGNING_SECRET }}

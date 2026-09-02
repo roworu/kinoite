@@ -6,12 +6,14 @@ on:
     paths:
       - ".github/workflows/tests.yml"
       - "Justfile"
+      - "Containerfile"
       - "**/*.sh"
       - "tests/**"
   pull_request:
     paths:
       - ".github/workflows/tests.yml"
       - "Justfile"
+      - "Containerfile"
       - "**/*.sh"
       - "tests/**"
   workflow_dispatch:
@@ -51,9 +53,7 @@ jobs:
 
   run_tests:
     name: Run tests on final OS image
-#    if: >-
-#      github.event_name == 'workflow_dispatch' ||
-#      github.event.workflow_run.conclusion == 'success'
+    needs: check_formatting
 
     runs-on: ubuntu-24.04
 
