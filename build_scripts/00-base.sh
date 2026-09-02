@@ -93,6 +93,9 @@ packages_to_remove=(
 	kdeconnect nwg-panel mediawriter krusader digikam showfoto uuctl
 	kleopatra kcharselect kde-connect plasma-welcome kdebugsettings
 	kjournald gnome-abrt kfind cockpit-system
+
+    # users should install browser of choice using flatpak + discover
+	firefox firefox-langpacks 
 )
 
 dnf5 -y group remove "${groups_to_remove[@]}"
