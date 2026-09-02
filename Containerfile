@@ -4,10 +4,30 @@ ARG FEDORA_VERSION=44
 FROM scratch AS ctx
 COPY build_scripts /
 
+
+###
+### overrides shared by both flavors
+###
+
+FROM ghcr.io/ublue-os/brew:latest AS brew
+FROM scratch AS overrides
+COPY system_files/base /
+# pre-built Linuxbrew prefix from ublue
+COPY --from=brew /system_files/usr/share/homebrew.tar.zst /usr/share/homebrew.tar.zst
+# one-shot systemd unit to unpack homebrew.tar.zst
+COPY --from=brew /system_files/usr/lib/systemd/system/brew-setup.service /usr/lib/systemd/system/brew-setup.service
+# add brew packages to PATH
+COPY --from=brew /system_files/etc/profile.d/brew.sh /etc/profile.d/brew.sh
+# bash completions
+COPY --from=brew /system_files/etc/profile.d/brew-bash-completion.sh /etc/profile.d/brew-bash-completion.sh
+# fish completions
+COPY --from=brew /system_files/usr/share/fish/vendor_conf.d/ublue-brew.fish /usr/share/fish/vendor_conf.d/ublue-brew.fish
+
 ###
 ### base plasma image
 ###
 FROM ghcr.io/ublue-os/kinoite-main:${FEDORA_VERSION} AS kinoite
+COPY --from=overrides / /
 
 ARG TESTING_ENVIRONMENT="FALSE"
 
@@ -28,6 +48,12 @@ RUN --mount=type=bind,from=ctx,source=/,target=/ctx \
     --mount=type=cache,dst=/var/cache \
     --mount=type=tmpfs,dst=/var \
     --mount=type=tmpfs,dst=/tmp \
+    /ctx/50-brew.sh
+
+RUN --mount=type=bind,from=ctx,source=/,target=/ctx \
+    --mount=type=cache,dst=/var/cache \
+    --mount=type=tmpfs,dst=/var \
+    --mount=type=tmpfs,dst=/tmp \
     /ctx/80-finilize.sh
 
 RUN bootc container lint
@@ -36,6 +62,7 @@ RUN bootc container lint
 ### plasma-nvidia image
 ###
 FROM ghcr.io/ublue-os/kinoite-nvidia:${FEDORA_VERSION} AS kinoite-nvidia
+COPY --from=overrides / /
 COPY system_files/nvidia /
 
 RUN --mount=type=bind,from=ctx,source=/,target=/ctx \
@@ -45,6 +72,12 @@ RUN --mount=type=bind,from=ctx,source=/,target=/ctx \
     /ctx/00-base.sh
 
 COPY system_files/nvidia /
+
+RUN --mount=type=bind,from=ctx,source=/,target=/ctx \
+    --mount=type=cache,dst=/var/cache \
+    --mount=type=tmpfs,dst=/var \
+    --mount=type=tmpfs,dst=/tmp \
+    /ctx/50-brew.sh
 
 RUN --mount=type=bind,from=ctx,source=/,target=/ctx \
     --mount=type=cache,dst=/var/cache \
