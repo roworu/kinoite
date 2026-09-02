@@ -38,7 +38,7 @@ cleanup() {
 		kernel-cachyos-lto-devel-matched
 	)
 
-	if rpm -q nvidia-driver &>/dev/null; then
+	if rpm -q nvidia-driver-libs &>/dev/null; then
 		cleanup_packages+=(
 			akmods
 			akmod-nvidia
@@ -49,7 +49,7 @@ cleanup() {
 	dnf5 -y clean all
 
 	rm -rfv /etc/yum.repos.d/*cachyos*
-	rm -rfv /run/dnf
+	rm -rfv /run/* /tmp/*
 
 	# from 00-base.sh kernel installation
 	rm -fv /usr/lib/kernel/install.d/05-rpmostree.install

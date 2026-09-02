@@ -59,9 +59,9 @@ systemctl enable ananicy-cpp.service
 
 KERNEL_VERSION=$(find /usr/lib/modules -mindepth 1 -maxdepth 1 -type d -printf '%f\n' -quit)
 
-if rpm -q nvidia-driver &>/dev/null; then
+if rpm -q nvidia-driver-libs &>/dev/null; then
 	dnf5 -y install akmods
-	dnf5 -y install --setopt=tsflags=noscripts --enablerepo=negativo17-fedora-nvidia akmod-nvidia
+	dnf5 -y install --setopt=tsflags=noscripts --enablerepo=fedora-nvidia akmod-nvidia
 	akmods --force --kernels "${KERNEL_VERSION}" --kmod nvidia
 fi
 
