@@ -35,10 +35,12 @@ RUN bootc container lint
 ###
 ### plasma-nvidia image
 ###
-FROM ghcr.io/ublue-os/kinoite-main:${FEDORA_VERSION} AS kinoite-nvidia
-COPY system_files/nvidia /
+# FROM ghcr.io/ublue-os/kinoite-main:${FEDORA_VERSION} AS kinoite-nvidia
+# COPY system_files/nvidia /
 
-ENV INSTALL_NVIDIA="TRUE"
+# ENV INSTALL_NVIDIA="TRUE"
+
+FROM ghcr.io/ublue-os/kinoite-nvidia:${FEDORA_VERSION} AS kinoite-nvidia
 
 RUN --mount=type=bind,from=ctx,source=/,target=/ctx \
     --mount=type=cache,dst=/var/cache \
