@@ -1,0 +1,399 @@
+---
+
+name: Build, test, and push container image (draft)
+on:
+
+#  pull_request:
+#    branches:
+#      - main
+#    paths:
+#      - ".github/workflows/full_build_test.yml"
+#      - "build_scripts/**"
+#      - "system_files/**"
+#      - "Containerfile"
+#      - "Justfile"
+#      - "disk_config/**"
+#      - "tests/**"
+#
+#  push:
+#    branches:
+#      - main
+#    paths:
+#      - ".github/workflows/full_build_test.yml"
+#      - "build_scripts/**"
+#      - "system_files/**"
+#      - "Containerfile"
+#      - "Justfile"
+#      - "disk_config/**"
+#      - "tests/**"
+
+  workflow_dispatch:
+
+env:
+  IMAGE_DESC: "${{ github.event.repository.name }}"
+  IMAGE_NAME: "${{ github.event.repository.name }}"
+  IMAGE_REGISTRY: "ghcr.io/${{ github.repository_owner }}"
+  FEDORA_VERSION: "44"
+  DEFAULT_TAG: "latest"
+
+concurrency:
+  group: ${{ github.workflow }}-${{ github.ref || github.run_id }}
+  cancel-in-progress: true
+
+jobs:
+
+  check_formatting:
+    name: check BASH formatting and lint
+    runs-on: ubuntu-24.04
+    timeout-minutes: 10
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v6
+
+      - name: install dependencies
+        run: |
+          sudo apt update && sudo apt install -y shfmt shellcheck
+
+      - name: run shfmt checker
+        run: |
+          find . -iname "*.sh" -type f -exec shfmt --diff "{}" +
+
+      - name: run shellcheck checker
+        run: |
+          find . -iname "*.sh" -type f -exec shellcheck "{}" ';'
+
+  check_python:
+    name: check Python formatting, lint, and types
+    needs: check_formatting
+    runs-on: ubuntu-24.04
+    timeout-minutes: 10
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v6
+
+      - name: Install uv
+        uses: astral-sh/setup-uv@20cfd1bf945f4377ade1205e4dbc17946fc9a30d # v10.0.1
+
+      - name: Install lint dependencies
+        working-directory: tests/src
+        run: |
+          uv sync --group lint --no-cache
+
+      - name: check code formatting (ruff format)
+        working-directory: tests/src
+        run: |
+          uv run ruff format --check .
+
+      - name: check lint issues -- unused/unsorted imports, unsafe calls, etc. (ruff check)
+        working-directory: tests/src
+        run: |
+          uv run ruff check .
+
+      - name: check type correctness (ty check)
+        working-directory: tests/src
+        run: |
+          uv run ty check .
+
+  build_test_push:
+    name: Build, test, and push image
+    needs: check_python
+
+    strategy:
+      fail-fast: true
+      matrix:
+        flavor: ["", "nvidia"]
+
+    runs-on: ubuntu-24.04
+    timeout-minutes: 180
+
+    permissions:
+      actions: read
+      contents: read
+      packages: write
+      id-token: write
+
+    steps:
+
+      - name: Checkout
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v6
+
+      - name: Get current date
+        id: date
+        run: |
+          echo "date=$(date -u +%Y\-%m\-%d\T%H\:%M\:%S\Z)" >> $GITHUB_OUTPUT
+
+      - name: Compute image name
+        id: image
+        run: |
+          if [ -n "${{ matrix.flavor }}" ]; then
+            echo "name=${{ env.IMAGE_NAME }}-${{ matrix.flavor }}" >> "$GITHUB_OUTPUT"
+            echo "default_tag=${{ matrix.flavor }}" >> "$GITHUB_OUTPUT"
+          else
+            echo "name=${{ env.IMAGE_NAME }}" >> "$GITHUB_OUTPUT"
+            echo "default_tag=${{ env.DEFAULT_TAG }}" >> "$GITHUB_OUTPUT"
+          fi
+
+      - name: Compute daily build sequence
+        id: build_seq
+        env:
+          GH_TOKEN: ${{ github.token }}
+          RUN_NUMBER: ${{ github.run_number }}
+          EVENT_NAME: ${{ github.event_name }}
+          FEDORA_VERSION: ${{ env.FEDORA_VERSION }}
+          REPOSITORY: ${{ github.repository }}
+        run: |
+          set -euo pipefail
+
+          TAG_DATE="$(date -u +%Y%m%d)"
+          START_OF_DAY="$(date -u +%Y-%m-%d)T00:00:00Z"
+          START_OF_NEXT_DAY="$(date -u -d tomorrow +%Y-%m-%d)T00:00:00Z"
+          API_URL="https://api.github.com/repos/${REPOSITORY}/actions/workflows/full_build_test.yml/runs?per_page=100&created=${START_OF_DAY}..${START_OF_NEXT_DAY}"
+
+          RUNS_JSON="$(mktemp)"
+          curl --fail --silent --show-error \
+            -H "Authorization: Bearer ${GH_TOKEN}" \
+            -H "Accept: application/vnd.github+json" \
+            "$API_URL" > "$RUNS_JSON"
+
+          DAILY_SEQUENCE="$(jq \
+            --argjson run_number "${RUN_NUMBER}" \
+            --arg event_name "${EVENT_NAME}" \
+            '[.workflow_runs[]
+              | select(.event == $event_name)
+              | select(.run_number <= $run_number)
+              | select(.conclusion == "success")
+            ] | length + 1' \
+            "$RUNS_JSON")"
+          rm -fv "$RUNS_JSON"
+
+          echo "daily_sequence=${DAILY_SEQUENCE}" >> "$GITHUB_OUTPUT"
+          echo "date_tag=${TAG_DATE}.${DAILY_SEQUENCE}" >> "$GITHUB_OUTPUT"
+          echo "version_tag=${FEDORA_VERSION}.${TAG_DATE}.${DAILY_SEQUENCE}" >> "$GITHUB_OUTPUT"
+
+      - name: Image Metadata
+        uses: docker/metadata-action@dc802804100637a589fabce1cb79ff13a1411302 # v6.2.0
+        id: metadata
+        with:
+          tags: |
+            type=raw,value=${{ steps.build_seq.outputs.date_tag }}
+            type=raw,value=${{ env.DEFAULT_TAG }}
+            type=raw,value=${{ env.FEDORA_VERSION }}
+            type=raw,value=${{ steps.build_seq.outputs.version_tag }}
+            type=raw,value=${{ matrix.flavor }},enable=${{ matrix.flavor != '' }}
+            type=sha,enable=${{ github.event_name == 'pull_request' }}
+            type=ref,event=pr
+          labels: |
+            org.opencontainers.image.created=${{ steps.date.outputs.date }}
+            org.opencontainers.image.description=${{ env.IMAGE_DESC }}
+            org.opencontainers.image.documentation=https://raw.githubusercontent.com/${{ github.repository }}/${{ github.sha }}/readme.md
+            org.opencontainers.image.source=https://github.com/${{ github.repository }}/blob/${{ github.sha }}/Containerfile
+            org.opencontainers.image.title=${{ steps.image.outputs.name }}
+            org.opencontainers.image.url=https://github.com/${{ github.repository }}/tree/${{ github.sha }}
+            org.opencontainers.image.vendor=${{ github.repository_owner }}
+            org.opencontainers.image.version=${{ steps.build_seq.outputs.version_tag }}
+            containers.bootc=1
+          sep-tags: ' '
+          sep-annotations: ' '
+
+      - name: Prepare build args file
+        run: |
+          cat <<'EOF' >>build_args.txt
+          FEDORA_VERSION=${{ env.FEDORA_VERSION }}
+          EOF
+
+      - name: Build production image
+        id: build_image
+        run: |
+          sudo -E buildah build \
+            --target ${{ steps.image.outputs.name }} \
+            --file Containerfile \
+            --build-arg-file build_args.txt \
+            --tag raw-img .
+
+      # make tests copy `test-img` from `raw-img` with SSH enabled and no pass
+      - name: Create a copy to run tests on
+        run: |
+          set -euo pipefail
+          ctr="$(sudo buildah from raw-img)"
+          sudo buildah run "$ctr" -- systemctl enable sshd.service
+          sudo buildah run "$ctr" -- sh -c '
+            echo "test_user ALL=(ALL) NOPASSWD:ALL" > /etc/sudoers.d/test_user &&
+            chmod 0440 /etc/sudoers.d/test_user
+          '
+          sudo buildah commit "$ctr" test-img
+          sudo buildah rm "$ctr"
+          sudo buildah tag test-img "localhost/${{ steps.image.outputs.name }}:${{ steps.image.outputs.default_tag }}"
+
+      # we need newer `act` version
+      - name: Prepare dependencies
+        run: |
+          sudo apt update && sudo apt install -y podman systemd-container
+
+          just_version="1.52.0"
+          just_archive="just-${just_version}-x86_64-unknown-linux-musl.tar.gz"
+          just_url="https://github.com/casey/just/releases/download/${just_version}/${just_archive}"
+          just_sha256="e0a712614574d45625332529c864754e26782422b7c7db931466180a618f092d"
+
+          curl --fail --location --show-error --silent --output "${just_archive}" "${just_url}"
+          echo "${just_sha256}  ${just_archive}" | sha256sum --check
+          tar -xzf "${just_archive}" just
+          chmod +x just
+          sudo install -m 0755 just /usr/local/bin/just
+
+      # Boots test-img
+      - name: Build and run VM image
+        run: |
+          nohup sudo env VM_GPU="FALSE" just run-vm-qcow2 \
+            "localhost/${{ steps.image.outputs.name }}" \
+            "${{ steps.image.outputs.default_tag }}" \
+            > vm.log 2>&1 &
+
+      - name: Build test runner
+        run: |
+          sudo podman build -f tests/Containerfile -t kinoite-test-runner .
+
+      - name: Run pytest integration tests
+        env:
+          TEST_SSH_WAIT_SECONDS: "900"
+        run: |
+          mkdir -p test-results
+          sudo podman run --rm --network host \
+            -v "${PWD}/tests/ssh:/ssh:ro,Z" \
+            -v "${PWD}/test-results:/tmp/test-results" \
+            kinoite-test-runner
+
+      - name: Parse test report
+        if: always()
+        run: |
+          python3 - <<'PY'
+          import os
+          import sys
+          import xml.etree.ElementTree as ET
+          from pathlib import Path
+
+          report = Path("test-results/junit.xml")
+          summary = Path(os.environ["GITHUB_STEP_SUMMARY"])
+
+          if not report.exists():
+              summary.write_text("## Pytest report\n\nJUnit report was not produced.\n", encoding="utf-8")
+              sys.exit(1)
+
+          root = ET.parse(report).getroot()
+          suites = [root] if root.tag == "testsuite" else list(root.iter("testsuite"))
+
+          def total(attribute):
+              return sum(int(suite.attrib.get(attribute, 0)) for suite in suites)
+
+          tests = total("tests")
+          failures = total("failures")
+          errors = total("errors")
+          skipped = total("skipped")
+          passed = tests - failures - errors - skipped
+
+          lines = [
+              f"## Pytest report ({os.environ.get('MATRIX_FLAVOR') or 'kinoite'})",
+              "",
+              f"- Passed: {passed}",
+              f"- Failed: {failures}",
+              f"- Errors: {errors}",
+              f"- Skipped: {skipped}",
+              f"- Total: {tests}",
+              "",
+          ]
+
+          for case in root.iter("testcase"):
+              problem = case.find("failure")
+              if problem is None:
+                  problem = case.find("error")
+              if problem is None:
+                  continue
+              name = f"{case.attrib.get('classname', '')}.{case.attrib.get('name', '')}".strip(".")
+              message = problem.attrib.get("message", "").splitlines()[0]
+              lines.append(f"- `{name}`: {message}")
+
+          summary.write_text("\n".join(lines), encoding="utf-8")
+          PY
+        env:
+          MATRIX_FLAVOR: ${{ matrix.flavor }}
+
+      - name: Debug
+        if: always()
+        run: |
+          cat vm.log
+
+      # only runs if every step above succeeded, works on raw-img 
+
+      - name: Run Rechunker
+        id: rechunk
+        uses: ublue-os/legacy-rechunk@v1.0.0
+        with:
+          rechunk: 'ghcr.io/ublue-os/legacy-rechunk:v1.0.0-x86_64'
+          ref: 'raw-img'
+          prev-ref: '${{ env.IMAGE_REGISTRY }}/${{ steps.image.outputs.name }}:${{ steps.image.outputs.default_tag }}'
+          skip_compression: false
+          version: '${{ steps.metadata.outputs.tags }}'
+          labels: '${{ steps.metadata.outputs.labels }}'
+
+      - name: Load in podman and tag
+        run: |
+          IMAGE=$(podman pull ${{ steps.rechunk.outputs.ref }})
+          sudo rm -rf ${{ steps.rechunk.outputs.output }}
+          for tag in ${{ steps.metadata.outputs.tags }}; do
+            podman tag $IMAGE "${{ env.IMAGE_REGISTRY }}/${{ steps.image.outputs.name }}:$tag"
+          done
+
+
+      # - name: Login to GitHub Container Registry
+      #   uses: docker/login-action@dbcb813823bdd20940b903addbd779551569679f
+      #   if: github.event_name != 'pull_request'
+      #   with:
+      #     registry: ghcr.io
+      #     username: ${{ github.actor }}
+      #     password: ${{ secrets.GITHUB_TOKEN }}
+      #
+      # - name: Push To GHCR
+      #   if: github.event_name != 'pull_request'
+      #   run: |
+      #     set -euo pipefail
+      #
+      #     retries=5
+      #     delay=10
+      #
+      #     for tag in ${{ steps.metadata.outputs.tags }}; do
+      #       echo "Pushing tag: $tag"
+      #
+      #       for attempt in $(seq 1 $retries); do
+      #         echo "  Attempt $attempt/$retries for $tag..."
+      #         if podman push "${{ env.IMAGE_REGISTRY }}/${{ steps.image.outputs.name }}:$tag" --tls-verify=true; then
+      #           echo "  Push of $tag succeeded"
+      #           break
+      #         fi
+      #
+      #         if [ "$attempt" -lt "$retries" ]; then
+      #           echo "  Push of $tag failed — retrying in $delay seconds..."
+      #           sleep $delay
+      #         else
+      #           echo "  Push of $tag failed after $retries attempts"
+      #           exit 1
+      #         fi
+      #       done
+      #     done
+      #
+      # - name: Install Cosign
+      #   if: github.event_name != 'pull_request'
+      #   uses: sigstore/cosign-installer@cad07c2e89fa2edd6e2d7bab4c1aa38e53f76003 # v4.1.1
+      #   with:
+      #     cosign-release: "v2.6.1"
+      #
+      # - name: Sign container image
+      #   if: github.event_name != 'pull_request' && github.ref == format('refs/heads/{0}', github.event.repository.default_branch)
+      #   run: |
+      #     IMAGE_FULL="${{ env.IMAGE_REGISTRY }}/${{ steps.image.outputs.name }}"
+      #     for tag in ${{ steps.metadata.outputs.tags }}; do
+      #       cosign sign -y --key env://COSIGN_PRIVATE_KEY $IMAGE_FULL:$tag
+      #     done
+      #   env:
+      #     COSIGN_EXPERIMENTAL: false
+      #     COSIGN_PRIVATE_KEY: ${{ secrets.SIGNING_SECRET }}
