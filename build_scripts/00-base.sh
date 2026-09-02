@@ -3,7 +3,10 @@
 set -ouex pipefail
 shopt -s nullglob
 
-# temp workaround permission issues
+# Each RUN in the Containerfile gets its own fresh tmpfs mounts for /tmp and
+# /var, which don't come up 1777 by default. akmods build step needs
+# both writable to create its scratch/BUILD dirs, or it fails with
+# "Permission denied" creating temp files
 mkdir -p /var/tmp /tmp
 chmod 1777 /var/tmp /tmp
 
