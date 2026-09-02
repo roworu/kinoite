@@ -94,8 +94,8 @@ packages_to_remove=(
 	kleopatra kcharselect kde-connect plasma-welcome kdebugsettings
 	kjournald gnome-abrt kfind cockpit-system
 
-    # users should install browser of choice using flatpak + discover
-	firefox firefox-langpacks 
+	# users should install browser of choice using flatpak + discover
+	firefox firefox-langpacks
 )
 
 dnf5 -y group remove "${groups_to_remove[@]}"

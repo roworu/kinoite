@@ -1,0 +1,61 @@
+#!/usr/bin/env bash
+
+set -uo pipefail
+
+BREW=/home/linuxbrew/.linuxbrew/bin/brew
+
+usage() {
+	cat <<'EOF'
+kctl - system management
+
+Usage:
+  kctl upgrade                 Pull and apply the latest system image, then
+                                update flatpaks and homebrew
+  kctl disable-update-notify   Turn off the "system is out of date" notification
+  kctl help                    Show this help
+EOF
+}
+
+cmd_upgrade() {
+	local reply
+	read -r -p "Update system, flatpak, and brew now? [Y/n] " reply || reply=""
+	case "$reply" in
+	[Nn]*)
+		echo "Aborted."
+		return 0
+		;;
+	esac
+
+	echo "==> Checking for a new system image..."
+	if ! rpm-ostree upgrade; then
+		echo "kctl: system image update failed, skipping flatpak/brew" >&2
+		return 1
+	fi
+
+	echo "==> Updating flatpaks..."
+	flatpak update -y || echo "kctl: flatpak update failed" >&2
+
+	if [ -x "$BREW" ]; then
+		echo "==> Updating homebrew..."
+		"$BREW" update && "$BREW" upgrade || echo "kctl: brew update failed" >&2
+	fi
+
+	echo "Done. Reboot to apply any staged system update."
+}
+
+cmd_disable_update_notify() {
+	systemctl --user disable --now kctl-update-notify.timer
+	echo "Update notifications disabled. Re-enable with:"
+	echo "  systemctl --user enable --now kctl-update-notify.timer"
+}
+
+case "${1:-help}" in
+upgrade) cmd_upgrade ;;
+disable-update-notify) cmd_disable_update_notify ;;
+help | --help | -h) usage ;;
+*)
+	echo "kctl: unknown command '${1:-}'" >&2
+	usage >&2
+	exit 1
+	;;
+esac
