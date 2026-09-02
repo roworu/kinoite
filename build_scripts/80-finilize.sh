@@ -49,7 +49,7 @@ cleanup() {
 	dnf5 -y clean all
 
 	rm -rfv /etc/yum.repos.d/*cachyos*
-	rm -rfv /run/* /tmp/*
+	rm -rfv /run/akmods /run/dnf /run/selinux-policy /tmp/*
 
 	# from 00-base.sh kernel installation
 	rm -fv /usr/lib/kernel/install.d/05-rpmostree.install
