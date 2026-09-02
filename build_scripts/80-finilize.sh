@@ -38,7 +38,7 @@ cleanup() {
 		kernel-cachyos-lto-devel-matched
 	)
 
-	if [ "${INSTALL_NVIDIA:-}" = "TRUE" ]; then
+	if rpm -q nvidia-driver &>/dev/null; then
 		cleanup_packages+=(
 			akmods
 			akmod-nvidia
@@ -49,8 +49,6 @@ cleanup() {
 	dnf5 -y clean all
 
 	rm -rfv /etc/yum.repos.d/*cachyos*
-	rm -fv /etc/yum.repos.d/fedora-nvidia.repo
-	rm -fv /etc/yum.repos.d/nvidia-container-toolkit.repo
 	rm -rfv /run/dnf
 
 	# from 00-base.sh kernel installation
