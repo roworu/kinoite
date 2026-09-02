@@ -45,7 +45,7 @@ jobs:
 
       - name: run shfmt checker
         run: |
-          find . -iname "*.sh" -type f -exec shfmt --check "{}" +
+          find . -iname "*.sh" -type f -exec shfmt --diff "{}" +
 
       - name: run shellcheck checker
         run: |
