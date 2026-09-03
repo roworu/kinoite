@@ -57,13 +57,13 @@ KERNEL_VERSION=$(find /usr/lib/modules -mindepth 1 -maxdepth 1 -type d -printf '
 if [ -f /usr/lib/dracut/dracut.conf.d/99-nvidia.conf ]; then
 	dnf5 -y config-manager addrepo --from-repofile=https://negativo17.org/repos/fedora-nvidia.repo
 
-	dnf5 -y install akmods
+	dnf5 -y install akmods nvtop
 	# akmod-nvidia's %post scriptlet auto-triggers a build via akmodsbuild, which
 	# refuses to run as root -- install it with scriptlets suppressed *before*
 	# anything else's dependency resolution can pull it in normally (and thus
 	# fail its %post as a side effect). The kmod is built explicitly below instead.
-	dnf5 -y install --setopt=tsflags=noscripts akmod-nvidia
-	dnf5 -y install nvidia-driver nvidia-driver-cuda xorg-x11-nvidia nvidia-settings nvidia-xconfig libnvidia-fbc
+	dnf5 -y install --setopt=tsflags=noscripts --from-repo=fedora-nvidia akmod-nvidia
+	dnf5 -y install --from-repo=fedora-nvidia nvidia-driver nvidia-driver-cuda xorg-x11-nvidia nvidia-settings nvidia-xconfig libnvidia-fbc
 	akmods --force --kernels "${KERNEL_VERSION}" --kmod nvidia
 
 	# akmods reports build failures as a "[FAILED]" log line but still exits 0,
@@ -74,10 +74,12 @@ if [ -f /usr/lib/dracut/dracut.conf.d/99-nvidia.conf ]; then
 		exit 1
 	fi
 
+	dnf5 -y config-manager addrepo --from-repofile=https://nvidia.github.io/libnvidia-container/stable/rpm/nvidia-container-toolkit.repo
+	dnf5 -y install --from-repo=nvidia-container-toolkit nvidia-container-toolkit nvidia-container-toolkit-base libnvidia-container-tools libnvidia-container1
+
+	
+	rm -fv /etc/yum.repos.d/nvidia-container-toolkit.repo
 	rm -fv /etc/yum.repos.d/fedora-nvidia.repo
-
-	dnf5 -y install nvtop
-
 fi
 
 ###
@@ -118,7 +120,7 @@ packages_to_remove=(
 	# users should install browser of choice using flatpak + discover
 	firefox firefox-langpacks
 
-	fedora-flathub-remote
+	fedora-flathub-remote plasma-discover-rpm-ostree
 )
 
 dnf5 -y group remove "${groups_to_remove[@]}"
