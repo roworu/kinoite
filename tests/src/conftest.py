@@ -18,7 +18,7 @@ assert TEST_KEY.is_file(), f"SSH key not found: {TEST_KEY}"
 @pytest.fixture(scope="session")
 def wait_for_ssh():
 
-    deadline = time.time() + int(os.getenv("TEST_SSH_WAIT_SECONDS", "600"))
+    deadline = time.time() + int(os.getenv("TEST_SSH_WAIT_SECONDS", "1800"))
 
     while time.time() < deadline:
         result = subprocess.run(

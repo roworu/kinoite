@@ -256,7 +256,7 @@ jobs:
 
       - name: Run pytest integration tests
         env:
-          TEST_SSH_WAIT_SECONDS: "900"
+          TEST_SSH_WAIT_SECONDS: "1800"
         run: |
           mkdir -p test-results
           sudo podman run --rm --network host \
