@@ -19,16 +19,6 @@ enabled = ["sshd"]
 [customizations.firewall]
 ports = ["22:tcp"]
 
-[customizations.services]
-enabled = ["sshd"]
-
-[[customizations.files]]
-path = "/etc/sudoers.d/test_user"
-mode = "0440"
-data = """
-test_user ALL=(ALL) NOPASSWD:ALL
-"""
-
 [[customizations.user]]
 name = "test_user"
 password = "test"

@@ -97,6 +97,8 @@ packages_to_remove=(
 
 	# users should install browser of choice using flatpak + discover
 	firefox firefox-langpacks
+
+	fedora-flathub-remote
 )
 
 dnf5 -y group remove "${groups_to_remove[@]}"

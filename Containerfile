@@ -29,6 +29,15 @@ COPY --from=brew /system_files/usr/share/fish/vendor_conf.d/ublue-brew.fish /usr
 FROM quay.io/fedora-ostree-desktops/kinoite:${FEDORA_VERSION} AS kinoite
 COPY --from=overrides / /
 
+ARG TESTING_ENVIRONMENT="FALSE"
+
+RUN if [ "${TESTING_ENVIRONMENT}" = "TRUE" ]; then \
+    echo "That is testing image!" && \
+    systemctl enable sshd.service && \
+    echo "test_user ALL=(ALL) NOPASSWD:ALL" > /etc/sudoers.d/test_user && \
+    chmod 0440 /etc/sudoers.d/test_user; \
+    fi
+
 RUN --mount=type=bind,from=ctx,source=/,target=/ctx \
     --mount=type=cache,dst=/var/cache \
     --mount=type=tmpfs,dst=/var \
@@ -73,6 +82,15 @@ RUN bootc container lint
 FROM quay.io/fedora-ostree-desktops/kinoite:${FEDORA_VERSION} AS kinoite-nvidia
 COPY --from=overrides / /
 COPY system_files/nvidia /
+
+ARG TESTING_ENVIRONMENT="FALSE"
+
+RUN if [ "${TESTING_ENVIRONMENT}" = "TRUE" ]; then \
+    echo "That is testing image!" && \
+    systemctl enable sshd.service && \
+    echo "test_user ALL=(ALL) NOPASSWD:ALL" > /etc/sudoers.d/test_user && \
+    chmod 0440 /etc/sudoers.d/test_user; \
+    fi
 
 RUN --mount=type=bind,from=ctx,source=/,target=/ctx \
     --mount=type=cache,dst=/var/cache \

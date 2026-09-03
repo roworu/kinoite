@@ -248,6 +248,19 @@ jobs:
           sudo buildah pull "${scratch_ref}"
           sudo buildah tag "${scratch_ref}" "localhost/${{ steps.image.outputs.name }}:${{ steps.image.outputs.default_tag }}"
 
+      - name: Create a copy to run tests on
+        run: |
+          set -euo pipefail
+          ctr="$(sudo buildah from "localhost/${{ steps.image.outputs.name }}:${{ steps.image.outputs.default_tag }}")"
+          sudo buildah run "$ctr" -- systemctl enable sshd.service
+          sudo buildah run "$ctr" -- sh -c '
+            echo "test_user ALL=(ALL) NOPASSWD:ALL" > /etc/sudoers.d/test_user &&
+            chmod 0440 /etc/sudoers.d/test_user
+          '
+          sudo buildah commit "$ctr" test-img
+          sudo buildah rm "$ctr"
+          sudo buildah tag test-img "localhost/${{ steps.image.outputs.name }}:${{ steps.image.outputs.default_tag }}"
+
       # we need newer `act` version
       - name: Prepare dependencies
         run: |
