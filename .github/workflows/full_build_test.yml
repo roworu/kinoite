@@ -260,6 +260,7 @@ jobs:
         run: |
           mkdir -p test-results
           sudo podman run --rm --network host \
+            -e TEST_SSH_WAIT_SECONDS="${TEST_SSH_WAIT_SECONDS}" \
             -v "${PWD}/tests/ssh:/ssh:ro,Z" \
             -v "${PWD}/test-results:/tmp/test-results" \
             kinoite-test-runner
