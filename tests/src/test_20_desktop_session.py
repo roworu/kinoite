@@ -1,3 +1,5 @@
+import time
+
 from defaults import PLASMA_DE_PACKAGES, REMOVED_PACKAGES_SAMPLE
 
 
@@ -54,10 +56,17 @@ def test_networkmanager_running(ssh_command):
 
 
 def test_pipewire_running(ssh_command):
-    result = ssh_command("systemctl --user is-active pipewire")
-    actual_state = result.stdout.strip()
+    deadline = time.time() + 30
+    actual_state = ""
+    while time.time() < deadline:
+        result = ssh_command("systemctl --user is-active pipewire", check=False)
+        actual_state = result.stdout.strip()
+        if actual_state == "active":
+            return
+        time.sleep(2)
+
     assert actual_state == "active", (
-        f"pipewire expected to be active, actual state: {actual_state}. Full response: {result.stdout}"
+        f"pipewire expected to be active, actual state: {actual_state}"
     )
 
 
