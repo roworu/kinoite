@@ -1,4 +1,4 @@
-#def test_ipv4_connectivity(ssh_command):
+# def test_ipv4_connectivity(ssh_command):
 #    ssh_command("ping 8.8.8.8 -c 3 -4")
 
 
