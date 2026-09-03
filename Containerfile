@@ -26,7 +26,7 @@ COPY --from=brew /system_files/usr/share/fish/vendor_conf.d/ublue-brew.fish /usr
 ###
 ### base plasma image
 ###
-FROM ghcr.io/ublue-os/kinoite-main:${FEDORA_VERSION} AS kinoite
+FROM quay.io/fedora-ostree-desktops/kinoite:${FEDORA_VERSION} AS kinoite
 COPY --from=overrides / /
 
 ARG TESTING_ENVIRONMENT="FALSE"
@@ -79,7 +79,7 @@ RUN bootc container lint
 ###
 ### plasma-nvidia image
 ###
-FROM ghcr.io/ublue-os/kinoite-nvidia:${FEDORA_VERSION} AS kinoite-nvidia
+FROM quay.io/fedora-ostree-desktops/kinoite:${FEDORA_VERSION} AS kinoite-nvidia
 COPY --from=overrides / /
 COPY system_files/nvidia /
 
