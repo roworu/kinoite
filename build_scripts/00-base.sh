@@ -58,8 +58,12 @@ if [ -f /usr/lib/dracut/dracut.conf.d/99-nvidia.conf ]; then
 	dnf5 -y config-manager addrepo --from-repofile=https://negativo17.org/repos/fedora-nvidia.repo
 
 	dnf5 -y install akmods
-	dnf5 -y install nvidia-driver nvidia-driver-cuda xorg-x11-nvidia nvidia-settings nvidia-xconfig
+	# akmod-nvidia's %post scriptlet auto-triggers a build via akmodsbuild, which
+	# refuses to run as root -- install it with scriptlets suppressed *before*
+	# anything else's dependency resolution can pull it in normally (and thus
+	# fail its %post as a side effect). The kmod is built explicitly below instead.
 	dnf5 -y install --setopt=tsflags=noscripts akmod-nvidia
+	dnf5 -y install nvidia-driver nvidia-driver-cuda xorg-x11-nvidia nvidia-settings nvidia-xconfig
 	akmods --force --kernels "${KERNEL_VERSION}" --kmod nvidia
 
 	# akmods reports build failures as a "[FAILED]" log line but still exits 0,
