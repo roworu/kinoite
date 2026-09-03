@@ -42,6 +42,7 @@ concurrency:
 
 jobs:
 
+
   check_formatting:
     name: check BASH formatting and lint
     runs-on: ubuntu-24.04
@@ -62,6 +63,7 @@ jobs:
       - name: run shellcheck checker
         run: |
           find . -iname "*.sh" -type f -exec shellcheck "{}" ';'
+
 
   check_python:
     name: check Python formatting, lint, and types
@@ -96,44 +98,26 @@ jobs:
         run: |
           uv run ty check .
 
-  build_test_push:
-    name: Build, test, and push image
+
+  prepare:
+    name: Compute build metadata
     needs: check_python
-
-    strategy:
-      fail-fast: true
-      matrix:
-        flavor: ["", "nvidia"]
-
     runs-on: ubuntu-24.04
-    timeout-minutes: 180
+    timeout-minutes: 10
 
     permissions:
       actions: read
-      contents: read
-      packages: write
-      id-token: write
+
+    outputs:
+      date: ${{ steps.date.outputs.date }}
+      date_tag: ${{ steps.build_seq.outputs.date_tag }}
+      version_tag: ${{ steps.build_seq.outputs.version_tag }}
 
     steps:
-
-      - name: Checkout
-        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v6
-
       - name: Get current date
         id: date
         run: |
           echo "date=$(date -u +%Y\-%m\-%d\T%H\:%M\:%S\Z)" >> $GITHUB_OUTPUT
-
-      - name: Compute image name
-        id: image
-        run: |
-          if [ -n "${{ matrix.flavor }}" ]; then
-            echo "name=${{ env.IMAGE_NAME }}-${{ matrix.flavor }}" >> "$GITHUB_OUTPUT"
-            echo "default_tag=${{ matrix.flavor }}" >> "$GITHUB_OUTPUT"
-          else
-            echo "name=${{ env.IMAGE_NAME }}" >> "$GITHUB_OUTPUT"
-            echo "default_tag=${{ env.DEFAULT_TAG }}" >> "$GITHUB_OUTPUT"
-          fi
 
       - name: Compute daily build sequence
         id: build_seq
@@ -172,30 +156,37 @@ jobs:
           echo "date_tag=${TAG_DATE}.${DAILY_SEQUENCE}" >> "$GITHUB_OUTPUT"
           echo "version_tag=${FEDORA_VERSION}.${TAG_DATE}.${DAILY_SEQUENCE}" >> "$GITHUB_OUTPUT"
 
-      - name: Image Metadata
-        uses: docker/metadata-action@dc802804100637a589fabce1cb79ff13a1411302 # v6.2.0
-        id: metadata
-        with:
-          tags: |
-            type=raw,value=${{ steps.build_seq.outputs.date_tag }}
-            type=raw,value=${{ env.DEFAULT_TAG }}
-            type=raw,value=${{ env.FEDORA_VERSION }}
-            type=raw,value=${{ steps.build_seq.outputs.version_tag }}
-            type=raw,value=${{ matrix.flavor }},enable=${{ matrix.flavor != '' }}
-            type=sha,enable=${{ github.event_name == 'pull_request' }}
-            type=ref,event=pr
-          labels: |
-            org.opencontainers.image.created=${{ steps.date.outputs.date }}
-            org.opencontainers.image.description=${{ env.IMAGE_DESC }}
-            org.opencontainers.image.documentation=https://raw.githubusercontent.com/${{ github.repository }}/${{ github.sha }}/readme.md
-            org.opencontainers.image.source=https://github.com/${{ github.repository }}/blob/${{ github.sha }}/Containerfile
-            org.opencontainers.image.title=${{ steps.image.outputs.name }}
-            org.opencontainers.image.url=https://github.com/${{ github.repository }}/tree/${{ github.sha }}
-            org.opencontainers.image.vendor=${{ github.repository_owner }}
-            org.opencontainers.image.version=${{ steps.build_seq.outputs.version_tag }}
-            containers.bootc=1
-          sep-tags: ' '
-          sep-annotations: ' '
+
+  build_image:
+    name: Build image (${{ matrix.flavor || 'kinoite' }})
+    needs: prepare
+
+    strategy:
+      fail-fast: true
+      matrix:
+        flavor: ["", "nvidia"]
+
+    runs-on: ubuntu-24.04
+    timeout-minutes: 60
+
+    permissions:
+      contents: read
+      packages: write
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v6
+
+      - name: Compute image name
+        id: image
+        run: |
+          if [ -n "${{ matrix.flavor }}" ]; then
+            echo "name=${{ env.IMAGE_NAME }}-${{ matrix.flavor }}" >> "$GITHUB_OUTPUT"
+            echo "default_tag=${{ matrix.flavor }}" >> "$GITHUB_OUTPUT"
+          else
+            echo "name=${{ env.IMAGE_NAME }}" >> "$GITHUB_OUTPUT"
+            echo "default_tag=${{ env.DEFAULT_TAG }}" >> "$GITHUB_OUTPUT"
+          fi
 
       - name: Prepare build args file
         run: |
@@ -204,7 +195,6 @@ jobs:
           EOF
 
       - name: Build production image
-        id: build_image
         run: |
           sudo -E buildah build \
             --target ${{ steps.image.outputs.name }} \
@@ -212,11 +202,56 @@ jobs:
             --build-arg-file build_args.txt \
             --tag raw-img .
 
-      # make tests copy `test-img` from `raw-img` with SSH enabled and no pass
+      - name: Push scratch image to GHCR
+        run: |
+          set -euo pipefail
+          echo "${{ secrets.GITHUB_TOKEN }}" | sudo buildah login --username "${{ github.actor }}" --password-stdin ghcr.io
+          sudo buildah push raw-img "${{ env.IMAGE_REGISTRY }}/${{ steps.image.outputs.name }}:ci-${{ github.run_id }}"
+
+
+  test_image:
+    name: Test image (${{ matrix.flavor || 'kinoite' }})
+    needs: build_image
+
+    strategy:
+      fail-fast: true
+      matrix:
+        flavor: ["", "nvidia"]
+
+    runs-on: ubuntu-24.04
+    timeout-minutes: 120
+
+    permissions:
+      contents: read
+      packages: read
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v6
+
+      - name: Compute image name
+        id: image
+        run: |
+          if [ -n "${{ matrix.flavor }}" ]; then
+            echo "name=${{ env.IMAGE_NAME }}-${{ matrix.flavor }}" >> "$GITHUB_OUTPUT"
+            echo "default_tag=${{ matrix.flavor }}" >> "$GITHUB_OUTPUT"
+          else
+            echo "name=${{ env.IMAGE_NAME }}" >> "$GITHUB_OUTPUT"
+            echo "default_tag=${{ env.DEFAULT_TAG }}" >> "$GITHUB_OUTPUT"
+          fi
+
+      - name: Pull scratch image
+        run: |
+          set -euo pipefail
+          echo "${{ secrets.GITHUB_TOKEN }}" | sudo buildah login --username "${{ github.actor }}" --password-stdin ghcr.io
+          scratch_ref="${{ env.IMAGE_REGISTRY }}/${{ steps.image.outputs.name }}:ci-${{ github.run_id }}"
+          sudo buildah pull "${scratch_ref}"
+          sudo buildah tag "${scratch_ref}" "localhost/${{ steps.image.outputs.name }}:${{ steps.image.outputs.default_tag }}"
+
       - name: Create a copy to run tests on
         run: |
           set -euo pipefail
-          ctr="$(sudo buildah from raw-img)"
+          ctr="$(sudo buildah from "localhost/${{ steps.image.outputs.name }}:${{ steps.image.outputs.default_tag }}")"
           sudo buildah run "$ctr" -- systemctl enable sshd.service
           sudo buildah run "$ctr" -- sh -c '
             echo "test_user ALL=(ALL) NOPASSWD:ALL" > /etc/sudoers.d/test_user &&
@@ -379,7 +414,71 @@ jobs:
         run: |
           cat vm.log
 
-      # only runs if every step above succeeded, works on raw-img 
+
+  publish_image:
+    name: Rechunk and publish (${{ matrix.flavor || 'kinoite' }})
+    needs: [prepare, build_image, test_image]
+
+    strategy:
+      fail-fast: true
+      matrix:
+        flavor: ["", "nvidia"]
+
+    runs-on: ubuntu-24.04
+    timeout-minutes: 30
+
+    permissions:
+      contents: read
+      packages: write
+      id-token: write
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v6
+
+      - name: Compute image name
+        id: image
+        run: |
+          if [ -n "${{ matrix.flavor }}" ]; then
+            echo "name=${{ env.IMAGE_NAME }}-${{ matrix.flavor }}" >> "$GITHUB_OUTPUT"
+            echo "default_tag=${{ matrix.flavor }}" >> "$GITHUB_OUTPUT"
+          else
+            echo "name=${{ env.IMAGE_NAME }}" >> "$GITHUB_OUTPUT"
+            echo "default_tag=${{ env.DEFAULT_TAG }}" >> "$GITHUB_OUTPUT"
+          fi
+
+      - name: Image Metadata
+        uses: docker/metadata-action@dc802804100637a589fabce1cb79ff13a1411302 # v6.2.0
+        id: metadata
+        with:
+          tags: |
+            type=raw,value=${{ needs.prepare.outputs.date_tag }}
+            type=raw,value=${{ env.DEFAULT_TAG }}
+            type=raw,value=${{ env.FEDORA_VERSION }}
+            type=raw,value=${{ needs.prepare.outputs.version_tag }}
+            type=raw,value=${{ matrix.flavor }},enable=${{ matrix.flavor != '' }}
+            type=sha,enable=${{ github.event_name == 'pull_request' }}
+            type=ref,event=pr
+          labels: |
+            org.opencontainers.image.created=${{ needs.prepare.outputs.date }}
+            org.opencontainers.image.description=${{ env.IMAGE_DESC }}
+            org.opencontainers.image.documentation=https://raw.githubusercontent.com/${{ github.repository }}/${{ github.sha }}/readme.md
+            org.opencontainers.image.source=https://github.com/${{ github.repository }}/blob/${{ github.sha }}/Containerfile
+            org.opencontainers.image.title=${{ steps.image.outputs.name }}
+            org.opencontainers.image.url=https://github.com/${{ github.repository }}/tree/${{ github.sha }}
+            org.opencontainers.image.vendor=${{ github.repository_owner }}
+            org.opencontainers.image.version=${{ needs.prepare.outputs.version_tag }}
+            containers.bootc=1
+          sep-tags: ' '
+          sep-annotations: ' '
+
+      - name: Pull scratch image
+        run: |
+          set -euo pipefail
+          echo "${{ secrets.GITHUB_TOKEN }}" | sudo buildah login --username "${{ github.actor }}" --password-stdin ghcr.io
+          scratch_ref="${{ env.IMAGE_REGISTRY }}/${{ steps.image.outputs.name }}:ci-${{ github.run_id }}"
+          sudo buildah pull "${scratch_ref}"
+          sudo buildah tag "${scratch_ref}" raw-img
 
       - name: Run Rechunker
         id: rechunk
@@ -453,3 +552,36 @@ jobs:
       #   env:
       #     COSIGN_EXPERIMENTAL: false
       #     COSIGN_PRIVATE_KEY: ${{ secrets.SIGNING_SECRET }}
+
+
+  cleanup_scratch_images:
+    name: Clean up scratch CI image (${{ matrix.flavor || 'kinoite' }})
+    if: always()
+    needs: [build_image, test_image, publish_image]
+
+    strategy:
+      matrix:
+        flavor: ["", "nvidia"]
+
+    runs-on: ubuntu-24.04
+    timeout-minutes: 10
+
+    permissions:
+      packages: write
+
+    steps:
+      - name: Compute image name
+        id: image
+        run: |
+          if [ -n "${{ matrix.flavor }}" ]; then
+            echo "name=${{ env.IMAGE_NAME }}-${{ matrix.flavor }}" >> "$GITHUB_OUTPUT"
+          else
+            echo "name=${{ env.IMAGE_NAME }}" >> "$GITHUB_OUTPUT"
+          fi
+
+      - name: Delete scratch CI image
+        uses: dataaxiom/ghcr-cleanup-action@d52806a0dc70b430571a37da1fde39733ffd640f # v1.2.2
+        with:
+          token: ${{ secrets.GITHUB_TOKEN }}
+          packages: ${{ steps.image.outputs.name }}
+          tags: ci-${{ github.run_id }}
