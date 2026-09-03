@@ -242,6 +242,15 @@ jobs:
           chmod +x just
           sudo install -m 0755 just /usr/local/bin/just
 
+      - name: Check virtualization support on this runner
+        run: |
+          echo "--- /dev/kvm ---"
+          ls -la /dev/kvm || echo "MISSING: /dev/kvm does not exist"
+          echo "--- cpu virt flags ---"
+          grep -Eo '(vmx|svm)' /proc/cpuinfo | sort -u || echo "MISSING: no vmx/svm cpu flags"
+          echo "--- kvm kernel modules ---"
+          lsmod | grep -i kvm || echo "MISSING: kvm module not loaded"
+
       # Boots test-img
       - name: Build and run VM image
         run: |
@@ -249,10 +258,47 @@ jobs:
             "localhost/${{ steps.image.outputs.name }}" \
             "${{ steps.image.outputs.default_tag }}" \
             > vm.log 2>&1 &
+          echo $! > vm.pid
 
       - name: Build test runner
         run: |
           sudo podman build -f tests/Containerfile -t kinoite-test-runner .
+
+      - name: Wait for VM to become reachable (diagnose if not)
+        run: |
+          set +e
+          vm_pid="$(cat vm.pid)"
+          deadline=$((SECONDS + 900))
+
+          while (( SECONDS < deadline )); do
+            if ! sudo kill -0 "${vm_pid}" 2>/dev/null; then
+              echo "::error::VM launcher process (pid ${vm_pid}) exited early -- qemu never came up."
+              echo "--- vm.log (full) ---"
+              cat vm.log
+              echo "--- podman ps -a ---"
+              sudo podman ps -a
+              exit 1
+            fi
+
+            if ss -tln | grep -q ':2222 '; then
+              echo "Port 2222 is listening after ${SECONDS}s"
+              break
+            fi
+
+            sleep 5
+          done
+
+          echo "--- podman ps -a ---"
+          sudo podman ps -a
+          echo "--- listening ports ---"
+          ss -tlnp
+          echo "--- vm.log tail ---"
+          tail -n 80 vm.log
+
+          if ! ss -tln | grep -q ':2222 '; then
+            echo "::error::Port 2222 never opened within ${deadline}s -- VM process is alive but qemu/network never came up. See podman ps and vm.log above."
+            exit 1
+          fi
 
       - name: Run pytest integration tests
         env:
