@@ -1,5 +1,3 @@
-import time
-
 from defaults import PLASMA_DE_PACKAGES, REMOVED_PACKAGES_SAMPLE
 
 
