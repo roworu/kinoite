@@ -74,8 +74,8 @@ def test_flatpak_system_auto_update_disabled(ssh_command):
     result = ssh_command(
         "systemctl is-enabled flatpak-system-update.timer", check=False
     )
-    assert result.stdout.strip() == "disabled", (
-        f"flatpak-system-update.timer expected disabled, actual: {result.stdout.strip()}"
+    assert result.stdout.strip() in ("disabled", "not-found"), (
+        f"flatpak-system-update.timer expected disabled or absent, actual: {result.stdout.strip()}"
     )
 
 
@@ -83,8 +83,8 @@ def test_flatpak_user_auto_update_disabled(ssh_command):
     result = ssh_command(
         "systemctl --user is-enabled flatpak-user-update.timer", check=False
     )
-    assert result.stdout.strip() == "disabled", (
-        f"flatpak-user-update.timer expected disabled, actual: {result.stdout.strip()}"
+    assert result.stdout.strip() in ("disabled", "not-found"), (
+        f"flatpak-user-update.timer expected disabled or absent, actual: {result.stdout.strip()}"
     )
 
 

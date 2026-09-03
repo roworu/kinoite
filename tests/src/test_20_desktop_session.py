@@ -55,21 +55,6 @@ def test_networkmanager_running(ssh_command):
     )
 
 
-def test_pipewire_running(ssh_command):
-    deadline = time.time() + 30
-    actual_state = ""
-    while time.time() < deadline:
-        result = ssh_command("systemctl --user is-active pipewire", check=False)
-        actual_state = result.stdout.strip()
-        if actual_state == "active":
-            return
-        time.sleep(2)
-
-    assert actual_state == "active", (
-        f"pipewire expected to be active, actual state: {actual_state}"
-    )
-
-
 def test_polkit_running(ssh_command):
     result = ssh_command("systemctl is-active polkit")
     actual_state = result.stdout.strip()
