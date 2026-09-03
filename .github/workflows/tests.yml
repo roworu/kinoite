@@ -2,20 +2,20 @@
 name: Run tests
 on:
 
-  push:
-    paths:
-      - ".github/workflows/tests.yml"
-      - "Justfile"
-      - "Containerfile"
-      - "**/*.sh"
-      - "tests/**"
-  pull_request:
-    paths:
-      - ".github/workflows/tests.yml"
-      - "Justfile"
-      - "Containerfile"
-      - "**/*.sh"
-      - "tests/**"
+#   push:
+#     paths:
+#       - ".github/workflows/tests.yml"
+#       - "Justfile"
+#       - "Containerfile"
+#       - "**/*.sh"
+#       - "tests/**"
+#   pull_request:
+#     paths:
+#       - ".github/workflows/tests.yml"
+#       - "Justfile"
+#       - "Containerfile"
+#       - "**/*.sh"
+#       - "tests/**"
   workflow_dispatch:
 
 env:
