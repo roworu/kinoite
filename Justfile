@@ -150,6 +150,14 @@ build-qcow2 $target_image=("localhost/" + image_name) $tag=default_tag: && (_bui
 [group('Build VM Image')]
 rebuild-qcow2 $target_image=("localhost/" + image_name) $tag=default_tag: && (_rebuild-bib target_image tag "qcow2" "disk_config/disk.toml")
 
+# Build a raw VM image from the current container image (skips the qcow2 conversion step)
+[group('Build VM Image')]
+build-raw $target_image=("localhost/" + image_name) $tag=default_tag: && (_build-bib target_image tag "raw" "disk_config/disk.toml")
+
+# Rebuild container image then build raw VM image
+[group('Build VM Image')]
+rebuild-raw $target_image=("localhost/" + image_name) $tag=default_tag: && (_rebuild-bib target_image tag "raw" "disk_config/disk.toml")
+
 ###
 ### Run VM
 ###
@@ -163,6 +171,10 @@ _run-vm $target_image $tag $type $config:
     image_file="output/${type}/disk.${type}"
     if [[ "${type}" == iso ]]; then
         image_file="output/bootiso/install.iso"
+    elif [[ "${type}" == raw ]]; then
+        # bootc-image-builder names the final pipeline (and thus the output
+        # subdirectory) "image" for the raw type, not "raw".
+        image_file="output/image/disk.raw"
     fi
 
     if [[ ! -f "${image_file}" ]]; then
@@ -207,3 +219,7 @@ _run-vm $target_image $tag $type $config:
 # Run the qcow2 VM (builds if not present)
 [group('Run VM')]
 run-vm-qcow2 $target_image=("localhost/" + image_name) $tag=default_tag: && (_run-vm target_image tag "qcow2" "disk_config/disk.toml")
+
+# Run the raw VM (builds if not present)
+[group('Run VM')]
+run-vm-raw $target_image=("localhost/" + image_name) $tag=default_tag: && (_run-vm target_image tag "raw" "disk_config/disk.toml")
