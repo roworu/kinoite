@@ -257,7 +257,7 @@ jobs:
 
       - name: Build and run VM image
         run: |
-          nohup sudo env VM_GPU="FALSE" just run-vm-qcow2 \
+          nohup sudo env VM_GPU="FALSE" just run-vm-raw \
             "localhost/${{ steps.image.outputs.name }}" \
             "${{ steps.image.outputs.default_tag }}" \
             > vm.log 2>&1 &
@@ -267,7 +267,7 @@ jobs:
         run: |
           set +e
           vm_pid="$(cat vm.pid)"
-          image_file="output/qcow2/disk.qcow2"
+          image_file="output/image/disk.raw"
           wait_budget=2400
           deadline=$((SECONDS + wait_budget))
           last_phase=""
