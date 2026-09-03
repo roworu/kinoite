@@ -63,7 +63,7 @@ if [ -f /usr/lib/dracut/dracut.conf.d/99-nvidia.conf ]; then
 	# anything else's dependency resolution can pull it in normally (and thus
 	# fail its %post as a side effect). The kmod is built explicitly below instead.
 	dnf5 -y install --setopt=tsflags=noscripts akmod-nvidia
-	dnf5 -y install nvidia-driver nvidia-driver-cuda xorg-x11-nvidia nvidia-settings nvidia-xconfig
+	dnf5 -y install nvidia-driver nvidia-driver-cuda xorg-x11-nvidia nvidia-settings nvidia-xconfig libnvidia-fbc
 	akmods --force --kernels "${KERNEL_VERSION}" --kmod nvidia
 
 	# akmods reports build failures as a "[FAILED]" log line but still exits 0,
@@ -75,7 +75,27 @@ if [ -f /usr/lib/dracut/dracut.conf.d/99-nvidia.conf ]; then
 	fi
 
 	rm -fv /etc/yum.repos.d/fedora-nvidia.repo
+
+	dnf5 -y install nvtop
+
 fi
+
+###
+### multimedia + extra packages
+###
+
+dnf5 -y install \
+	"https://mirrors.rpmfusion.org/free/fedora/rpmfusion-free-release-$(rpm -E %fedora).noarch.rpm" \
+	"https://mirrors.rpmfusion.org/nonfree/fedora/rpmfusion-nonfree-release-$(rpm -E %fedora).noarch.rpm"
+dnf5 -y swap ffmpeg-free ffmpeg --allowerasing
+dnf5 -y intel-media-driver
+dnf5 -y install mesa-va-drivers-freeworld
+dnf5 -y swap mesa-vulkan-drivers{,-freeworld}
+dnf5 -y install @multimedia --setopt="install_weak_deps=False" --exclude=PackageKit-gstreamer-plugin
+
+dnf5 -y remove rpmfusion-free-release rpmfusion-nonfree-release
+
+dnf5 -y install distrobox
 
 ###
 ### minimize image
