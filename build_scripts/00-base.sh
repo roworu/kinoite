@@ -25,11 +25,6 @@ printf '%s\n' '#!/bin/sh' 'exit 0' >50-dracut.install
 chmod +x 05-rpmostree.install 50-dracut.install
 popd
 
-mapfile -t stale_nvidia_kmods < <(rpm -qa --queryformat '%{NAME}\n' | grep -E '^kmod-nvidia(-|$)')
-if [ "${#stale_nvidia_kmods[@]}" -gt 0 ]; then
-	dnf5 -y remove "${stale_nvidia_kmods[@]}"
-fi
-
 for pkg in kernel kernel-core kernel-modules kernel-modules-core kernel-modules-extra kernel-uki-virt; do
 	if rpm -q "$pkg" >/dev/null 2>&1; then
 		dnf5 -y remove "$pkg"
@@ -54,16 +49,16 @@ dnf5 -y install ananicy-cpp
 systemctl enable ananicy-cpp.service
 
 ###
-### nvidia kernel module rebuild (kinoite-nvidia flavor only)
+### nvidia driver + kernel module rebuild (kinoite-nvidia flavor only)
 ###
 
 KERNEL_VERSION=$(find /usr/lib/modules -mindepth 1 -maxdepth 1 -type d -printf '%f\n' -quit)
 
-if rpm -q nvidia-driver-libs &>/dev/null; then
-	sed -i '0,/enabled=0/{s/enabled=0/enabled=1/}' /etc/yum.repos.d/negativo17-fedora-nvidia.repo
-	sed -i '0,/enabled=0/{s/enabled=0/enabled=1/}' /etc/yum.repos.d/nvidia-container-toolkit.repo
+if [ -f /usr/lib/dracut/dracut.conf.d/99-nvidia.conf ]; then
+	dnf5 -y config-manager addrepo --from-repofile=https://negativo17.org/repos/fedora-nvidia.repo
 
 	dnf5 -y install akmods
+	dnf5 -y install nvidia-driver nvidia-driver-cuda xorg-x11-nvidia nvidia-settings nvidia-xconfig
 	dnf5 -y install --setopt=tsflags=noscripts akmod-nvidia
 	akmods --force --kernels "${KERNEL_VERSION}" --kmod nvidia
 
@@ -74,6 +69,8 @@ if rpm -q nvidia-driver-libs &>/dev/null; then
 		find /var/cache/akmods -iname '*.log' -exec sh -c 'echo "=== $1 ==="; cat "$1"' _ {} \; >&2
 		exit 1
 	fi
+
+	rm -fv /etc/yum.repos.d/fedora-nvidia.repo
 fi
 
 ###
