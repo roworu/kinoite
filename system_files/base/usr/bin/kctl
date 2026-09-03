@@ -44,9 +44,9 @@ cmd_upgrade() {
 }
 
 cmd_disable_update_notify() {
-	systemctl --user disable --now kctl-update-notify.timer
+	systemctl --user mask --now kctl-update-notify.timer
 	echo "Update notifications disabled. Re-enable with:"
-	echo "  systemctl --user enable --now kctl-update-notify.timer"
+	echo "  systemctl --user unmask kctl-update-notify.timer"
 }
 
 case "${1:-help}" in
