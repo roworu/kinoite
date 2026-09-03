@@ -148,7 +148,7 @@ def test_kctl_disable_update_notify_command(ssh_command):
     result = ssh_command(
         "systemctl --user is-enabled kctl-update-notify.timer", check=False
     )
-    assert result.stdout.strip() == "disabled", (
-        f"kctl-update-notify.timer expected disabled after `kctl disable-update-notify`, "
+    assert result.stdout.strip() == "masked", (
+        f"kctl-update-notify.timer expected masked after `kctl disable-update-notify`, "
         f"actual: {result.stdout.strip()}"
     )
