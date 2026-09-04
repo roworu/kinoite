@@ -162,7 +162,7 @@ jobs:
 
 
   build_image:
-    name: Build image (${{ matrix.flavor || 'base' }})
+    name: Build image (${{ matrix.flavor || 'kuubik' }})
     needs: prepare
 
     strategy:
@@ -215,7 +215,7 @@ jobs:
 
 
   test_image:
-    name: Test image (${{ matrix.flavor || 'base' }})
+    name: Test image (${{ matrix.flavor || 'kuubik' }})
     needs: build_image
 
     strategy:
