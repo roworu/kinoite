@@ -12,6 +12,7 @@ COPY build_scripts /
 FROM ghcr.io/ublue-os/brew:latest AS brew
 FROM scratch AS overrides
 COPY system_files/base /
+COPY cosign.pub /etc/pki/containers/kinoite.pub
 # pre-built Linuxbrew prefix from ublue
 COPY --from=brew /system_files/usr/share/homebrew.tar.zst /usr/share/homebrew.tar.zst
 # one-shot systemd unit to unpack homebrew.tar.zst

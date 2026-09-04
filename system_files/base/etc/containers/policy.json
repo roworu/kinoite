@@ -1,0 +1,36 @@
+{
+    "default": [
+        {
+            "type": "insecureAcceptAnything"
+        }
+    ],
+    "transports": {
+        "docker": {
+            "ghcr.io/roworu/kinoite": [
+                {
+                    "type": "sigstoreSigned",
+                    "keyPath": "/etc/pki/containers/kinoite.pub",
+                    "signedIdentity": {
+                        "type": "matchRepository"
+                    }
+                }
+            ],
+            "ghcr.io/roworu/kinoite-nvidia": [
+                {
+                    "type": "sigstoreSigned",
+                    "keyPath": "/etc/pki/containers/kinoite.pub",
+                    "signedIdentity": {
+                        "type": "matchRepository"
+                    }
+                }
+            ]
+        },
+        "docker-daemon": {
+            "": [
+                {
+                    "type": "insecureAcceptAnything"
+                }
+            ]
+        }
+    }
+}
