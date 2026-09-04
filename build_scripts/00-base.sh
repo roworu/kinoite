@@ -77,7 +77,6 @@ if [ -f /usr/lib/dracut/dracut.conf.d/99-nvidia.conf ]; then
 	dnf5 -y config-manager addrepo --from-repofile=https://nvidia.github.io/libnvidia-container/stable/rpm/nvidia-container-toolkit.repo
 	dnf5 -y install --from-repo=nvidia-container-toolkit nvidia-container-toolkit nvidia-container-toolkit-base libnvidia-container-tools libnvidia-container1
 
-	
 	rm -fv /etc/yum.repos.d/nvidia-container-toolkit.repo
 	rm -fv /etc/yum.repos.d/fedora-nvidia.repo
 fi
