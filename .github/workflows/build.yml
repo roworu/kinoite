@@ -509,6 +509,7 @@ jobs:
 
       - name: Load in podman and tag
         run: |
+          sudo chown -R "$(id -u):$(id -g)" "/run/user/$(id -u)" 2>/dev/null || true
           IMAGE=$(podman pull ${{ steps.rechunk.outputs.ref }})
           sudo rm -rf ${{ steps.rechunk.outputs.output }}
           for tag in ${{ steps.metadata.outputs.tags }}; do
