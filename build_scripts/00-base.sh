@@ -38,7 +38,6 @@ kernel_packages=(
 	kernel-cachyos-lto-core
 	kernel-cachyos-lto-devel-matched
 	kernel-cachyos-lto-modules
-
 )
 
 dnf5 -y install "${kernel_packages[@]}"
@@ -86,8 +85,11 @@ fi
 ###
 
 dnf5 -y install \
-	"https://mirrors.rpmfusion.org/free/fedora/rpmfusion-free-release-$(rpm -E %fedora).noarch.rpm" \
-	"https://mirrors.rpmfusion.org/nonfree/fedora/rpmfusion-nonfree-release-$(rpm -E %fedora).noarch.rpm"
+    "https://download1.rpmfusion.org/free/fedora/rpmfusion-free-release-$(rpm -E %fedora).noarch.rpm"
+
+dnf5 -y install \
+    "https://download1.rpmfusion.org/nonfree/fedora/rpmfusion-nonfree-release-$(rpm -E %fedora).noarch.rpm"
+
 dnf5 -y swap ffmpeg-free ffmpeg --allowerasing
 dnf5 -y install intel-media-driver
 dnf5 -y install mesa-va-drivers-freeworld
@@ -115,12 +117,11 @@ packages_to_remove=(
 	kdeconnect nwg-panel mediawriter krusader digikam showfoto uuctl
 	kleopatra kcharselect kde-connect plasma-welcome kdebugsettings
 	kjournald gnome-abrt kfind cockpit-system
-
-	# users should install browser of choice using flatpak + discover
-	firefox firefox-langpacks
-
 	fedora-flathub-remote plasma-discover-rpm-ostree
 )
 
 dnf5 -y group remove "${groups_to_remove[@]}"
 dnf5 -y remove "${packages_to_remove[@]}"
+
+# users should install browser of choice using flatpak + discover
+dnf5 -y remove firefox firefox-langpacks

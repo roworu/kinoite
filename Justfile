@@ -61,7 +61,6 @@ format:
 ### Build Container Image
 ###
 
-# Build the container image (always pulls latest base)
 [group('Build Container Image')]
 build $target_image=image_name $tag=default_tag:
     #!/usr/bin/env bash
@@ -69,6 +68,7 @@ build $target_image=image_name $tag=default_tag:
 
     podman build \
         --pull=newer \
+        --no-cache \
         --build-arg FEDORA_VERSION="${fedora_version}" \
         --build-arg TESTING_ENVIRONMENT="${testing_env}" \
         --label "org.opencontainers.image.version=${fedora_version}.$(date -u +%Y%m%d).0" \
