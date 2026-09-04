@@ -48,7 +48,7 @@ dnf5 -y install ananicy-cpp
 systemctl enable ananicy-cpp.service
 
 ###
-### nvidia driver + kernel module rebuild (kinoite-nvidia flavor only)
+### nvidia driver + kernel module rebuild (kuubik-nvidia flavor only)
 ###
 
 KERNEL_VERSION=$(find /usr/lib/modules -mindepth 1 -maxdepth 1 -type d -printf '%f\n' -quit)

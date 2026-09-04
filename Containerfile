@@ -12,7 +12,7 @@ COPY build_scripts /
 FROM ghcr.io/ublue-os/brew:latest AS brew
 FROM scratch AS overrides
 COPY system_files/base /
-COPY cosign.pub /etc/pki/containers/kinoite.pub
+COPY cosign.pub /etc/pki/containers/kuubik.pub
 # pre-built Linuxbrew prefix from ublue
 COPY --from=brew /system_files/usr/share/homebrew.tar.zst /usr/share/homebrew.tar.zst
 # one-shot systemd unit to unpack homebrew.tar.zst
@@ -27,7 +27,7 @@ COPY --from=brew /system_files/usr/share/fish/vendor_conf.d/ublue-brew.fish /usr
 ###
 ### base plasma image
 ###
-FROM quay.io/fedora-ostree-desktops/kinoite:${FEDORA_VERSION} AS kinoite
+FROM quay.io/fedora-ostree-desktops/kinoite:${FEDORA_VERSION} AS kuubik
 COPY --from=overrides / /
 
 ARG TESTING_ENVIRONMENT="FALSE"
@@ -81,7 +81,7 @@ RUN bootc container lint
 ###
 ### plasma-nvidia image
 ###
-FROM quay.io/fedora-ostree-desktops/kinoite:${FEDORA_VERSION} AS kinoite-nvidia
+FROM quay.io/fedora-ostree-desktops/kinoite:${FEDORA_VERSION} AS kuubik-nvidia
 COPY --from=overrides / /
 COPY system_files/nvidia /
 

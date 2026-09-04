@@ -162,7 +162,7 @@ jobs:
 
 
   build_image:
-    name: Build image (${{ matrix.flavor || 'kinoite' }})
+    name: Build image (${{ matrix.flavor || 'base' }})
     needs: prepare
 
     strategy:
@@ -215,7 +215,7 @@ jobs:
 
 
   test_image:
-    name: Test image (${{ matrix.flavor || 'kinoite' }})
+    name: Test image (${{ matrix.flavor || 'base' }})
     needs: build_image
 
     strategy:
@@ -293,7 +293,7 @@ jobs:
 
       - name: Build test runner
         run: |
-          sudo podman build -f tests/Containerfile -t kinoite-test-runner .
+          sudo podman build -f tests/Containerfile -t kuubik-test-runner .
 
       - name: Build and run VM image
         run: |
@@ -358,7 +358,7 @@ jobs:
             -e TEST_SSH_WAIT_SECONDS="${TEST_SSH_WAIT_SECONDS}" \
             -v "${PWD}/tests/ssh:/ssh:ro,Z" \
             -v "${PWD}/test-results:/tmp/test-results:Z" \
-            kinoite-test-runner
+            kuubik-test-runner
 
       - name: Parse test report
         if: always()
@@ -389,7 +389,7 @@ jobs:
           passed = tests - failures - errors - skipped
 
           lines = [
-              f"## Pytest report ({os.environ.get('MATRIX_FLAVOR') or 'kinoite'})",
+              f"## Pytest report ({os.environ.get('MATRIX_FLAVOR') or 'kuubik'})",
               "",
               f"- Passed: {passed}",
               f"- Failed: {failures}",
@@ -418,7 +418,7 @@ jobs:
         if: always()
         uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4.6.2
         with:
-          name: test-results-${{ matrix.flavor || 'kinoite' }}
+          name: test-results-${{ matrix.flavor || 'kuubik' }}
           path: |
             test-results/
             vm.log
@@ -432,7 +432,7 @@ jobs:
 
 
   publish_image:
-    name: Rechunk and publish (${{ matrix.flavor || 'kinoite' }})
+    name: Rechunk and publish (${{ matrix.flavor || 'kuubik' }})
     needs: [prepare, build_image, test_image]
 
     strategy:
@@ -572,7 +572,7 @@ jobs:
 
 
   cleanup_scratch_images:
-    name: Clean up scratch CI image (${{ matrix.flavor || 'kinoite' }})
+    name: Clean up scratch CI image (${{ matrix.flavor || 'kuubik' }})
     if: always()
     needs: [build_image, test_image, publish_image]
 

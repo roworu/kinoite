@@ -37,8 +37,8 @@ version() {
 	[ -n "${IMAGE_VERSION:-}" ] || return 0
 
 	sed -i \
-		-e "s|^VERSION=.*|VERSION=\"${IMAGE_VERSION} (Kinoite)\"|" \
-		-e "s|^PRETTY_NAME=.*|PRETTY_NAME=\"Fedora Linux ${IMAGE_VERSION} (Kinoite)\"|" \
+		-e "s|^VERSION=.*|VERSION=\"${IMAGE_VERSION} (kuubik)\"|" \
+		-e "s|^PRETTY_NAME=.*|PRETTY_NAME=\"kuubik Linux ${IMAGE_VERSION}\"|" \
 		-e "s|^OSTREE_VERSION=.*|OSTREE_VERSION='${IMAGE_VERSION}'|" \
 		/usr/lib/os-release
 }

@@ -1,6 +1,6 @@
 # taken from https://github.com/ublue-os/image-template/blob/main/Justfile
 
-export image_name := env("IMAGE_NAME", "kinoite")
+export image_name := env("IMAGE_NAME", "kuubik")
 export default_tag := env("DEFAULT_TAG", "latest")
 export bib_image := env("BIB_IMAGE", "quay.io/centos-bootc/bootc-image-builder:latest")
 export fedora_version := env("FEDORA_VERSION", "44")
@@ -65,6 +65,8 @@ format:
 build $target_image=image_name $tag=default_tag:
     #!/usr/bin/env bash
     set -euo pipefail
+
+    rm -rf "${TMPDIR:-/var/tmp}"/buildah-cache*
 
     podman build \
         --pull=newer \
