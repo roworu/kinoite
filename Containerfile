@@ -30,6 +30,7 @@ FROM quay.io/fedora-ostree-desktops/kinoite:${FEDORA_VERSION} AS kinoite
 COPY --from=overrides / /
 
 ARG TESTING_ENVIRONMENT="FALSE"
+ARG IMAGE_VERSION=""
 
 RUN if [ "${TESTING_ENVIRONMENT}" = "TRUE" ]; then \
     echo "That is testing image!" && \
@@ -72,7 +73,7 @@ RUN --mount=type=bind,from=ctx,source=/,target=/ctx \
     --mount=type=cache,dst=/var/cache \
     --mount=type=tmpfs,dst=/var \
     --mount=type=tmpfs,dst=/tmp \
-    /ctx/80-finilize.sh
+    IMAGE_VERSION="${IMAGE_VERSION}" /ctx/80-finilize.sh
 
 RUN bootc container lint
 
@@ -84,6 +85,7 @@ COPY --from=overrides / /
 COPY system_files/nvidia /
 
 ARG TESTING_ENVIRONMENT="FALSE"
+ARG IMAGE_VERSION=""
 
 RUN if [ "${TESTING_ENVIRONMENT}" = "TRUE" ]; then \
     echo "That is testing image!" && \
@@ -128,6 +130,6 @@ RUN --mount=type=bind,from=ctx,source=/,target=/ctx \
     --mount=type=cache,dst=/var/cache \
     --mount=type=tmpfs,dst=/var \
     --mount=type=tmpfs,dst=/tmp \
-    /ctx/80-finilize.sh
+    IMAGE_VERSION="${IMAGE_VERSION}" /ctx/80-finilize.sh
 
 RUN bootc container lint

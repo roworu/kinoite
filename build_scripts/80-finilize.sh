@@ -32,6 +32,17 @@ build_initramfs() {
 	chmod 0600 "/usr/lib/modules/$KERNEL_VERSION/initramfs.img"
 }
 
+version() {
+	# add versions to /usr/lib/os-release so grub could use then
+	[ -n "${IMAGE_VERSION:-}" ] || return 0
+
+	sed -i \
+		-e "s|^VERSION=.*|VERSION=\"${IMAGE_VERSION} (Kinoite)\"|" \
+		-e "s|^PRETTY_NAME=.*|PRETTY_NAME=\"Fedora Linux ${IMAGE_VERSION} (Kinoite)\"|" \
+		-e "s|^OSTREE_VERSION=.*|OSTREE_VERSION='${IMAGE_VERSION}'|" \
+		/usr/lib/os-release
+}
+
 cleanup() {
 
 	cleanup_packages=(
@@ -57,5 +68,6 @@ cleanup() {
 
 }
 
+version
 build_initramfs
 cleanup
